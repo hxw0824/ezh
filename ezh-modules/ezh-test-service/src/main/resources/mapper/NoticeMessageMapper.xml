@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.NoticeMessageMapper">
+
+    <sql id="noticeMessageColumns">
+		a.id AS "id",
+		a.room_id AS "roomId",
+		a.`from` AS "from",
+		a.text AS "text",
+		a.audio AS "audio",
+		a.image AS "image",
+		a.type AS "type",
+		a.create_time AS "createTime",
+		u.image_id AS "userImageId"
+	</sql>
+
+    <sql id="noticeMessageJoins">
+		LEFT JOIN sys_user u ON a.`from` = u.login_name
+	</sql>
+
+    <select id="getList" resultType="com.github.ezh.api.model.dto.NoticeMessageDto">
+        SELECT
+            <include refid="noticeMessageColumns"/>
+        FROM double_chat_message a
+		<include refid="noticeMessageJoins"/>
+        WHERE FIND_IN_SET(a.`from`,#{froms})
+        AND a.type = #{type}
+		AND a.del_flag = 0
+        ORDER BY a.create_time DESC
+        LIMIT #{offset},#{limit}
+    </select>
+
+    <select id="getListNum" resultType="java.lang.Integer">
+        SELECT
+            COUNT(a.id)
+        FROM double_chat_message a
+        WHERE FIND_IN_SET(a.`from`,#{froms})
+        AND a.type = #{type}
+        AND a.del_flag = 0
+    </select>
+
+	<update id="deleteFlag">
+		UPDATE double_chat_message SET
+			del_flag = 1
+		WHERE id = #{id}
+	</update>
+</mapper>

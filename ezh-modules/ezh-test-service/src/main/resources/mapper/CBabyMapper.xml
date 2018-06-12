@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.CBabyMapper">
+
+    <sql id="cBabyColumns">
+        a.id AS "id",
+        a.office_id AS "officeId",
+        a.class_id AS "classId",
+        a.user_id AS "userId",
+        a.text AS "text",
+        a.img_id AS "imgId",
+        a.create_date AS "createDate",
+        u.name AS "userName",
+        u.image_id AS "userImageId"
+	</sql>
+
+    <sql id="cBabyJoins">
+        LEFT JOIN sys_user u ON u.id = a.user_id
+	</sql>
+
+    <select id="getList" resultType="com.github.ezh.api.model.dto.CBabyDto">
+        SELECT
+        <include refid="cBabyColumns"/>
+        FROM c_baby a
+        <include refid="cBabyJoins"/>
+        WHERE a.office_id = #{officeId}
+        AND a.del_flag = 0
+        <choose>
+            <when test="userType != 4">
+                <if test="classId != null and classId != ''">
+                    AND a.class_id = #{classId}
+                </if>
+            </when>
+            <otherwise>
+                AND FIND_IN_SET(a.user_id,(
+                SELECT CONCAT(s.str,',',x.str) as "str" from (
+                SELECT
+                GROUP_CONCAT(DISTINCT a.user_id ORDER BY a.user_id) AS "str"
+                FROM c_baby a
+                left join sys_user u on u.id = a.user_id
+                where a.office_id = #{officeId}
+                and a.class_id = #{classId} ) s
+                LEFT JOIN (
+                SELECT GROUP_CONCAT(DISTINCT id ORDER BY id) AS "str" from sys_user where office_id = #{officeId}
+                AND FIND_IN_SET(user_type,'3,4')
+                ) x on 1 = 1
+                ))
+            </otherwise>
+        </choose>
+        ORDER BY a.create_date DESC
+        LIMIT #{offset},#{limit}
+    </select>
+    
+    <update id="deleteFlag">
+        UPDATE c_baby SET
+          del_flag = 1
+        WHERE id = #{id}
+    </update>
+</mapper>

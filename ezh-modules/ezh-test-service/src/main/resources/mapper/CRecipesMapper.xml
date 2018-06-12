@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.CRecipesMapper">
+
+    <sql id="cRecipesColumns">
+        a.id AS "id",
+        a.office_id AS "officeId",
+        a.create_date AS "createDate",
+        a.update_date AS "updateDate",
+        a.text AS "text",
+        a.img AS "img"
+	</sql>
+
+    <sql id="cRecipesJoins">
+    </sql>
+
+    <select id="getByOfficeIdAndDate" resultType="com.github.ezh.api.model.dto.CRecipesDto">
+        SELECT
+        <include refid="cRecipesColumns"/>
+        FROM c_recipes a
+        <include refid="cRecipesJoins"/>
+        WHERE a.office_id = #{officeId}
+        AND DATE_FORMAT(a.create_date,"%Y-%m-%d") = DATE_FORMAT(#{createDate},"%Y-%m-%d")
+    </select>
+
+    <update id="updateRecipes">
+        UPDATE c_recipes SET
+            update_date = #{updateDate},
+            text = #{text},
+            img = #{img}
+		WHERE id = #{id}
+    </update>
+</mapper>

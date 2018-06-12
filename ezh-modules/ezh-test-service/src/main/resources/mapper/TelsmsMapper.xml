@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.TelsmsMapper">
+
+    <sql id="telsmsColumns">
+        a.id AS "id",
+        a.phone AS "phone",
+        a.code AS "code",
+        a.create_date AS "createDate"
+	</sql>
+
+    <sql id="telsmsJoins">
+
+	</sql>
+
+    <select id="getByPhone" resultType="com.github.ezh.api.model.entity.Telsms">
+        SELECT
+        <include refid="telsmsColumns"/>
+        FROM c_telsms a
+        <include refid="telsmsJoins"/>
+        WHERE a.phone = #{phone}
+        ORDER BY a.create_date DESC
+    </select>
+</mapper>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.MonitorMapper">
+
+    <sql id="monitorColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.device_id AS "deviceId",
+		a.office_id AS "officeId",
+		a.class_id AS "classId",
+		a.ip AS "ip",
+		a.begin_time AS "beginTime",
+		a.end_time AS "endTime",
+		a.status AS "status",
+		a.remarks AS "remarks",
+		o.name AS "officeName"
+	</sql>
+
+    <sql id="monitorJoins">
+        LEFT JOIN sys_office o ON o.id = a.office_id
+    </sql>
+
+    <select id="get" resultType="com.github.ezh.api.model.dto.MonitorDto">
+        SELECT
+        <include refid="monitorColumns"/>
+        FROM sys_monitor a
+        <include refid="monitorJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="getList" resultType="com.github.ezh.api.model.dto.MonitorDto">
+        SELECT
+        <include refid="monitorColumns"/>
+        FROM sys_monitor a
+        <include refid="monitorJoins"/>
+        <where>
+            <if test="officeId != null and officeId != ''">
+                AND a.office_id = #{officeId}
+            </if>
+            <if test="classId != null and classId != ''">
+                AND a.class_id = #{classId}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateMonitor">
+        UPDATE sys_monitor SET
+        <if test="name != null and name != ''">
+            name = #{name},
+        </if>
+        <if test="status != null and status != ''">
+            status = #{status},
+        </if>
+        id = #{id}
+        WHERE id = #{id}
+    </update>
+</mapper>

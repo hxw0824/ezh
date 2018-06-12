@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.CBookMapper">
+
+    <sql id="cBookColumns">
+        a.id AS "id",
+        a.period_id AS "periodId",
+        a.name AS "name",
+        a.content AS "content",
+        a.thumbnail_url AS "thumbnailUrl",
+        a.image_url AS "imageUrl",
+        a.sort AS "sort",
+        a.bookshelf_id AS "bookshelfId"
+	</sql>
+
+    <sql id="cBookJoins">
+    </sql>
+
+    <select id="get" resultType="com.github.ezh.api.model.dto.CBookDto">
+        SELECT
+            a.id AS "id",
+            a.period_id AS "periodId",
+            a.name AS "name",
+            a.content AS "content",
+            a.thumbnail_url AS "thumbnailUrl",
+            a.image_url AS "imageUrl",
+            a.sort AS "sort",
+            a.bookshelf_id AS "bookshelfId",
+            (SELECT SUM(clicks_num) FROM c_course where book_id = #{id}) AS "clicksNum"
+        FROM  c_book a
+        where a.id = #{id}
+    </select>
+
+    <!-- 查询书架图书列表 -->
+    <select id="getBooksByShelfId" resultType="com.github.ezh.api.model.dto.CBookDto">
+        SELECT
+        <include refid="cBookColumns"/>
+        FROM c_book a
+        <include refid="cBookJoins"/>
+        where a.period_id = #{periodId}
+        and a.bookshelf_id = #{bookshelfId}
+        ORDER BY a.sort
+    </select>
+
+    <!-- 获取书架数据 -->
+    <select id="getBookShelfList" resultType="com.github.ezh.api.model.entity.CBookShelf">
+		SELECT
+			a.id AS "id",
+			a.shelf_id AS "shelfId",
+			a.name AS "name"
+		FROM c_book_shelf a
+		ORDER BY a.shelf_id
+	</select>
+</mapper>

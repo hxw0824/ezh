@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.work.mapper.CWorkMapper">
+
+    <sql id="cWorkColumns">
+    </sql>
+
+    <sql id="cWorkJoins">
+    </sql>
+
+    <select id="getByClassId" resultType="com.github.ezh.work.model.dto.CWorkDto">
+		SELECT
+            a.id AS "userId",
+            a.class_id AS "classId",
+            a.image_id AS "userImageId",
+            a.name AS "name",
+            CASE WHEN w.uid IS NULL then 0 ELSE 1 END AS "isWork"
+        FROM sys_user a
+        LEFT JOIN (
+            select
+            DISTINCT(user_id) AS "uid"
+            from c_work
+            where DATE_FORMAT(sign_time,'%Y-%m-%d') = DATE_FORMAT(#{selectTime},'%Y-%m-%d')
+            <if test="isTemp != null and isTemp == true">
+                <![CDATA[
+                  AND sign_temp > 10
+              ]]>
+            </if>
+        )w on a.id = w.uid
+        where a.user_type = 5
+        and a.class_id = #{classId}
+    </select>
+
+    <select id="getSignTimeByUserId" resultType="com.github.ezh.work.model.dto.CWorkDto">
+		SELECT
+          a.sign_time AS "signTime",
+          a.pic_url AS "picUrl",
+          a.pic_url1 AS "picUrl1",
+          a.sign_mode AS "signMode"
+        FROM c_work a
+        where a.user_id = #{userId}
+        and FIND_IN_SET(a.sign_time,(
+          SELECT CONCAT(MIN(sign_time),',',MAX(sign_time))
+          FROM c_work
+          where DATE_FORMAT(sign_time ,'%y-%M-%d') = DATE_FORMAT(#{selectTime} ,'%y-%M-%d')
+          AND user_id = #{userId}
+        ))
+        ORDER BY a.sign_time
+    </select>
+
+    <select id="getSignTempByUserId" resultType="com.github.ezh.work.model.dto.CWorkDto">
+		SELECT
+		  a.sign_time AS "signTime",
+          a.sign_temp AS "signTemp",
+          a.sign_mode AS "signMode"
+        FROM c_work a
+        where a.user_id = #{userId}
+        and DATE_FORMAT(sign_time ,'%y-%M-%d') = DATE_FORMAT(#{selectTime} ,'%y-%M-%d')
+        <![CDATA[
+          and a.sign_temp > 10
+        ]]>
+        ORDER BY a.sign_time
+    </select>
+
+    <select id="getMonthWorkByUserId" resultType="com.github.ezh.work.model.dto.CWorkDto">
+		SELECT
+            DATE_FORMAT(a.sign_time ,'%Y-%m-%d') AS "signTime"
+        FROM c_work a
+        where a.user_id = #{userId}
+        <![CDATA[
+            AND DATE_FORMAT(a.sign_time ,'%y-%M-%d') >= DATE_FORMAT(#{beginDate} ,'%y-%M-%d')
+            AND DATE_FORMAT(a.sign_time ,'%y-%M-%d') <= DATE_FORMAT(#{endDate} ,'%y-%M-%d')
+        ]]>
+        <if test="isTemp != null and isTemp == true">
+            <![CDATA[
+                  and a.sign_temp > 10
+              ]]>
+        </if>
+        GROUP BY DATE_FORMAT(a.sign_time ,'%Y-%m-%d')
+        ORDER BY a.sign_time
+    </select>
+</mapper>

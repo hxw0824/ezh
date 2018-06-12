@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.UserMapper">
+
+    <sql id="userColumns">
+		a.id,
+    	a.office_id AS "officeId",
+    	a.office_id AS "office.id",
+    	a.class_id AS "classId",
+    	a.period_id AS "periodId",
+    	a.user_token AS "userToken",
+    	a.login_name AS "loginName",
+    	a.password,
+		a.name,
+		a.email,
+		a.mobile,
+		a.user_type AS "userType",
+		a.image_id AS "imageId",
+		a.photo,
+		a.remarks,
+		o.name AS "office.name",
+		o.type AS "office.type",
+		cs.id AS "cclass.id",
+		cs.name AS "cclass.name",
+		uc.user_id AS "userConfig.userId",
+		uc.client_id AS "userConfig.clientId",
+		uc.show_num AS "userConfig.showNum",
+		uc.notice_num AS "userConfig.noticeNum"
+	</sql>
+
+    <sql id="userJoins">
+		LEFT JOIN sys_office o ON o.id = a.office_id
+		LEFT JOIN c_class cs ON cs.id = a.class_id
+		LEFT JOIN user_config uc ON uc.user_id = a.id
+	</sql>
+
+    <!-- 查询用户 -->
+    <select id="get" resultType="com.github.ezh.api.model.dto.UserDto">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="getById" resultType="com.github.ezh.api.model.dto.UserDto">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="getByLoginNameOne" resultType="com.github.ezh.api.model.dto.UserDto">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        WHERE a.login_name = #{loginName}
+    </select>
+
+    <!-- 根据登录名查询用户 -->
+    <select id="getByLoginName" resultType="com.github.ezh.api.model.dto.UserDto">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        WHERE a.login_name = #{loginName}
+    </select>
+
+    <!-- 根据手机号查询用户 -->
+    <select id="getByMobile" resultType="com.github.ezh.api.model.dto.UserDto">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        WHERE a.mobile = #{mobile}
+    </select>
+
+    <!-- 根据学校ID查询园长,根据学校ID查询教师,根据班级ID查询家长 -->
+    <select id="getByAny" resultType="com.github.ezh.api.model.dto.UserDto">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        <where>
+            <if test="userType != null and userType != ''">
+                AND a.user_type = #{userType}
+            </if>
+            <if test="officeId != null and officeId != ''">
+                AND a.office_id = #{officeId}
+            </if>
+            <if test="classId != null and classId != ''">
+                AND a.class_id = #{classId}
+            </if>
+            <if test="userId != null and userId != ''">
+                <![CDATA[
+                    AND a.id <> #{userId}
+                ]]>
+            </if>
+        </where>
+    </select>
+
+    <update id="updatePwd">
+        UPDATE sys_user SET
+            password = #{password}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePwdByMobile">
+        UPDATE sys_user SET
+            password = #{password}
+        WHERE mobile = #{mobile}
+    </update>
+
+    <update id="updateImageId">
+        UPDATE sys_user SET
+            image_id = #{imageId}
+        WHERE id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.api.mapper.CCourseMapper">
+
+    <sql id="cCourseColumns">
+        a.id AS "id",
+        a.book_id AS "bookId",
+        a.period_id AS "periodId",
+        a.res_code AS "resCode",
+        a.file_name AS "fileName",
+        a.file_url AS "fileUrl",
+        a.file_auffix AS "fileAuffix",
+        a.icon_url AS "iconUrl",
+        a.thumbnail_url AS "thumbnailUrl",
+        a.content AS "content",
+        a.tagcode AS "tagcode",
+        a.tag AS "tag",
+        a.recommend_sort AS "recommendSort",
+        a.sort AS "sort",
+        a.clicks_num AS "clicksNum"
+	</sql>
+
+    <sql id="cCourseJoins">
+    </sql>
+
+    <select id="get" resultType="com.github.ezh.api.model.dto.CCourseDto">
+        SELECT
+        <include refid="cCourseColumns"/>
+        FROM c_course a
+        <include refid="cCourseJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <!-- 根据书籍ID查询课程列表 -->
+    <select id="getBookListByBookId" resultType="com.github.ezh.api.model.dto.CCourseVoDto">
+        SELECT
+            a.id AS "id",
+            a.file_name AS "fileName",
+            a.icon_url AS "iconUrl"
+        FROM c_course a
+        WHERE a.book_id = #{bookId}
+        ORDER BY a.sort
+	</select>
+
+    <!-- 获取每日推荐 -->
+    <select id="getRecommend" resultType="com.github.ezh.api.model.dto.CCourseDto">
+        SELECT
+        <include refid="cCourseColumns"/>
+        FROM c_course a
+        <include refid="cCourseJoins"/>
+        WHERE a.period_id = #{periodId}
+        AND a.recommend_sort = #{recommendSort}
+        LIMIT 1
+    </select>
+
+    <update id="addClickNum">
+        UPDATE c_course SET
+            clicks_num = clicks_num+1
+        WHERE id = #{id}
+    </update>
+</mapper>

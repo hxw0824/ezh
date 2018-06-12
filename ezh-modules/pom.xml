@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>ezh</artifactId>
+        <groupId>com.github</groupId>
+        <version>${ezh.version}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.ezh</groupId>
+    <artifactId>ezh-modules</artifactId>
+    <version>${ezh.version}</version>
+    <packaging>pom</packaging>
+
+    <name>ezh-modules</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <modules>
+        <module>ezh-work-service</module>
+        <module>ezh-test-service</module>
+        <module>ezh-mysql-service</module>
+    </modules>
+
+</project>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.work.mapper.WorkMapper">
+
+    <sql id="workColumns">
+        a.id AS "id",
+        a.device_id AS "deviceId",
+        a.office_id AS "officeId",
+        a.images AS "images",
+        a.language AS "language",
+        a.position AS "position",
+        a.create_date AS "createDate",
+        a.remarks AS "remarks"
+	</sql>
+
+    <sql id="workJoins">
+	</sql>
+
+    <!-- 根据设备ID获取打卡机 -->
+    <select id="getByDeviceId" resultType="com.github.ezh.work.model.dto.WorkDto">
+        SELECT
+            <include refid="workColumns"/>
+        FROM sys_work a
+          <include refid="workJoins"/>
+        WHERE a.device_id = #{deviceId}
+    </select>
+
+    <!-- 根据名字获取学校 -->
+    <select id="getOfficeByName" resultType="com.github.ezh.work.model.entity.Office">
+        SELECT
+            a.id AS "id",
+            a.name AS "name",
+            a.phone AS "tel"
+        FROM sys_office a
+        WHERE a.name = #{name}
+    </select>
+
+    <!-- 根据id获取学校 -->
+    <select id="getOfficeById" resultType="com.github.ezh.work.model.entity.Office">
+        SELECT
+            a.id AS "id",
+            a.name AS "name",
+            a.phone AS "tel"
+        FROM sys_office a
+        WHERE a.id = #{id}
+    </select>
+
+    <!-- 根据id获取绑定IC卡 -->
+    <select id="getCard" resultType="com.github.ezh.work.model.entity.Card">
+        SELECT
+            a.id AS "id",
+            a.office_id AS "officeId",
+            a.user_id AS "userId",
+            a.create_date AS "createDate"
+        FROM c_card a
+        WHERE a.id = #{id}
+    </select>
+
+    <insert id="bindCard">
+        INSERT INTO c_card (
+            id,
+            office_id,
+            user_id,
+            create_date
+        )  VALUE (
+            #{id},
+            #{officeId},
+            #{userId},
+            #{createDate}
+        )
+
+    </insert>
+
+    <update id="updateCard">
+        UPDATE c_card SET
+            office_id = #{officeId},
+            user_id = #{userId},
+            create_date = #{createDate}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateWork">
+        UPDATE sys_work SET
+            device_id = #{deviceId},
+            office_id = #{officeId},
+            position = #{position},
+            create_date = #{createDate},
+            remarks = #{remarks}
+        WHERE id = #{id}
+    </update>
+</mapper>

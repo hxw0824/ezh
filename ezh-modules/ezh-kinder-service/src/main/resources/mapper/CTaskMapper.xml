@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.CTaskMapper">
+
+    <sql id="cTaskColumns">
+        a.id AS "id",
+        a.office_id AS "officeId",
+        a.class_id AS "classId",
+        a.user_id AS "userId",
+        a.title AS "title",
+        a.type AS "type",
+        a.explain AS "explain",
+        a.attach AS "attach",
+        a.begin_date AS "beginDate",
+        a.end_date AS "endDate",
+        a.create_date AS "createDate",
+        su.name AS "userName",
+        cc.name AS "className"
+    </sql>
+
+    <sql id="cTaskJoins">
+        LEFT JOIN sys_user su ON a.user_id = su.id
+        LEFT JOIN c_class cc ON a.class_id = cc.id
+    </sql>
+
+    <select id="getById" resultType="com.github.ezh.kinder.model.dto.CTaskDto">
+        SELECT
+            <include refid="cTaskColumns"/>
+        FROM c_task a
+            <include refid="cTaskJoins"/>
+        WHERE a.del_flag = 0
+        AND a.id = #{id}
+    </select>
+
+    <select id="getTaskList" resultType="com.github.ezh.kinder.model.dto.CTaskDto">
+        SELECT
+            <include refid="cTaskColumns"/>,
+        <![CDATA[
+                CASE WHEN c.task_id IS NULL THEN (
+                  CASE WHEN (SELECT user_type FROM sys_user WHERE id = #{obj.userId}) = 5 THEN 0 ELSE 1 END
+                ) ELSE 1 END AS "isRead"
+            ]]>
+        FROM c_task a
+            <include refid="cTaskJoins"/>
+        LEFT JOIN (
+            SELECT
+                y.task_id
+            FROM c_task z
+            LEFT JOIN c_task_user y ON z.id = y.task_id
+            WHERE y.user_id = #{obj.userId}
+        ) c ON a.id = c.task_id
+        WHERE a.del_flag = 0
+        AND a.office_id = #{obj.officeId}
+        <if test="obj.classId != null and obj.classId != ''">
+            and (a.class_id = #{obj.classId} or a.class_id is null)
+        </if>
+        ORDER BY a.create_date DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset},#{limit}
+        </if>
+    </select>
+
+    <select id="getReadStatusList" resultType="com.github.ezh.kinder.model.dto.ReadStatusDto">
+        SELECT
+            u.name,
+            u.image_id,
+        CASE WHEN x.user_id IS NULL THEN 0 ELSE 1 END AS "isRead"
+        FROM sys_user u
+        LEFT JOIN c_task z ON 1 = 1
+        LEFT JOIN (
+            SELECT
+                a.user_id
+            FROM c_task_user a
+            WHERE a.task_id = #{id}
+        ) x ON u.id = x.user_id
+        WHERE z.del_flag = 0
+        AND u.office_id = #{officeId}
+        <if test="classId != null and classId != ''">
+            AND u.class_id = #{classId}
+        </if>
+        AND z.id = #{id}
+        <![CDATA[
+            AND u.create_date <= z.create_date
+            AND u.user_type = 5
+        ]]>
+        ORDER BY isRead DESC, u.user_type, u.id
+    </select>
+
+    <select id="getTaskDetail" resultType="com.github.ezh.kinder.model.dto.CTaskDetailDto">
+        SELECT
+            a.id AS "id",
+            a.content AS "content",
+            a.images AS "images",
+            a.star AS "star",
+            a.comment AS "comment",
+            a.create_date AS "createDate",
+            u.name AS "userName",
+            u.image_id AS "userImages",
+            c.name AS "className",
+            CASE WHEN star IS NULL THEN 0 ELSE 1 END AS "isStar"
+        FROM c_task_user a
+        LEFT JOIN sys_user u ON a.user_id = u.id
+        LEFT JOIN c_class c ON u.class_id = c.id
+        WHERE a.task_id = #{id}
+        ORDER BY a.create_date DESC
+    </select>
+
+    <insert id="readTask">
+        INSERT INTO c_task_user (
+            id,
+            task_id,
+            user_id,
+            content,
+            images,
+            create_date
+        ) VALUE (
+            #{id},
+            #{taskId},
+            #{userId},
+            #{content},
+            #{images},
+            #{createDate}
+        )
+    </insert>
+
+    <update id="reviewTask">
+        UPDATE c_task_user SET
+            star = #{star},
+            comment = #{comment}
+        WHERE task_id = #{taskId}
+        AND FIND_IN_SET(user_id,#{userId})
+    </update>
+
+    <update id="deleteFlag">
+        UPDATE c_task SET
+          del_flag = 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteFlagUser">
+        UPDATE c_task_user SET
+          del_flag = 1
+        WHERE task_id = #{id}
+    </update>
+</mapper>

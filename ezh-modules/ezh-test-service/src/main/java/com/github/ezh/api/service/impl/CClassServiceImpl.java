@@ -5,7 +5,6 @@ import com.github.ezh.api.mapper.CClassMapper;
 import com.github.ezh.api.model.dto.CClassDto;
 import com.github.ezh.api.model.entity.CClass;
 import com.github.ezh.api.service.CClassService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

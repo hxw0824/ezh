@@ -1,9 +1,9 @@
 package com.github.ezh.api.model.dto;
 
-import com.github.ezh.api.model.entity.CClass;
 import com.github.ezh.api.model.entity.Office;
-import com.github.ezh.api.model.entity.User;
 import com.github.ezh.api.model.entity.UserConfig;
+import com.github.ezh.api.model.entity.CClass;
+import com.github.ezh.api.model.entity.User;
 import lombok.Data;
 
 /**

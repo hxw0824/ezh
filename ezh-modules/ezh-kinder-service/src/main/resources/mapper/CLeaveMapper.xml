@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.CLeaveMapper">
+
+    <sql id="cLeaveColumns">
+        a.id AS "id",
+        a.office_id AS "officeId",
+        a.class_id AS "classId",
+        a.user_id AS "userId",
+        a.type AS "type",
+        a.days AS "days",
+        a.dates AS "dates",
+        a.reason AS "reason",
+        a.read_user AS "readUser",
+        a.create_date AS "createDate",
+        a.account AS "account",
+        a.status AS "status",
+        su.name AS "userName",
+        cc.name AS "className",
+        su.user_type AS "userType"
+    </sql>
+
+    <sql id="cLeaveJoins">
+        LEFT JOIN sys_user su ON a.user_id = su.id
+        LEFT JOIN c_class cc ON a.class_id = cc.id
+    </sql>
+
+    <select id="getById" resultType="com.github.ezh.kinder.model.dto.CLeaveDto">
+        SELECT
+            <include refid="cLeaveColumns"/>
+        FROM c_leave a
+            <include refid="cLeaveJoins"/>
+        WHERE a.del_flag = 0
+        AND a.id = #{id}
+    </select>
+
+    <select id="getLeaveList" resultType="com.github.ezh.kinder.model.dto.CLeaveDto">
+        SELECT
+            <include refid="cLeaveColumns"/>,
+            CASE WHEN FIND_IN_SET(#{obj.userId},a.read_user) = 0 THEN 0 ELSE 1 END  AS "isRead"
+        FROM c_leave a
+            <include refid="cLeaveJoins"/>
+        WHERE a.del_flag = 0
+        AND a.office_id = #{obj.officeId}
+        <choose>
+            <when test="userType == 5">
+                AND a.class_id = #{obj.classId}
+                AND a.user_id = #{obj.userId}
+            </when>
+            <when test="userType == 4">
+                AND su.user_type = 5
+                AND a.class_id = #{obj.classId}
+            </when>
+            <otherwise>
+                AND su.user_type = 4
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="userType == 4">
+                ORDER BY su.user_type DESC,a.create_date DESC
+            </when>
+            <otherwise>
+                ORDER BY a.create_date DESC
+            </otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+            LIMIT #{offset},#{limit}
+        </if>
+    </select>
+
+
+    <update id="readLeave">
+        UPDATE c_leave SET
+            read_user = CONCAT(read_user,#{userId},',')
+        WHERE id = #{id}
+    </update>
+
+    <update id="audited">
+        UPDATE c_leave SET
+            status = #{status},
+            account = #{account}
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteFlag">
+        UPDATE c_leave SET
+        del_flag = 1
+        WHERE id = #{id}
+    </update>
+</mapper>

@@ -1,7 +1,6 @@
 package com.github.ezh.api.mapper;
 
 import com.baomidou.mybatisplus.mapper.BaseMapper;
-import com.github.ezh.api.model.dto.ChatMessageDto;
 import com.github.ezh.api.model.dto.NoticeMessageDto;
 import com.github.ezh.api.model.entity.NoticeMessage;
 import org.apache.ibatis.annotations.Param;

@@ -1,7 +1,6 @@
 package com.github.ezh.api.controller;
 
 import com.gexin.rp.sdk.base.uitls.RandomUtil;
-import com.github.ezh.api.common.util.*;
 import com.github.ezh.api.model.domain.*;
 import com.github.ezh.api.model.dto.*;
 import com.github.ezh.api.model.entity.*;
@@ -373,7 +372,7 @@ public class IndexController extends BaseController {
 //        if (user.getUserType().equals(UserDto.USER_TYPE_PARENT)) {
 //            number.incrementAndGet();
             cCourseService.addClickNum(domain.getCourseId());
-            return ResultUtil.success(ReturnCode.OPERATION_SUCCESS);
+            return ResultUtil.success(ReturnCode.SUCCESS);
 //        } else {
 //            return ResultUtil.error(ReturnCode.USER_NOT_AUTH);
 //        }
@@ -463,7 +462,7 @@ public class IndexController extends BaseController {
         User user1 = userService.getByMobile(mobile);
         user1.setPassword(SecurityUtils.encodePwd(newPassword));
         boolean isSuccess = userService.updatePwdByMobile(user1);
-        return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.OPERATION_UNSUCCESS);
+        return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.UNSUCCESS);
     }
 
     /*
@@ -480,7 +479,7 @@ public class IndexController extends BaseController {
         if (SecurityUtils.matchPwd(domain.getPassword(), user.getPassword())) {
             user.setPassword(SecurityUtils.encodePwd(domain.getNewPassword()));
             userService.updatePwd(user);
-            return ResultUtil.success(ReturnCode.OPERATION_SUCCESS);
+            return ResultUtil.success(ReturnCode.SUCCESS);
         } else {
             return ResultUtil.error(ReturnCode.OLD_PASSWORD_IS_ERROR);
         }
@@ -566,7 +565,7 @@ public class IndexController extends BaseController {
                     }
                 }
             }
-            return ResultUtil.success(ReturnCode.OPERATION_SUCCESS);
+            return ResultUtil.success(ReturnCode.SUCCESS);
 //        } else {
 //            return ResultUtil.error(ReturnCode.USER_NOT_AUTH);
 //        }
@@ -751,13 +750,13 @@ public class IndexController extends BaseController {
     @PostMapping("/delFlagBaby" )
     public Result delFlagBaby(String id) throws Exception{
         boolean isSuccess = cBabyService.deleteFlag(id);
-        return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.OPERATION_UNSUCCESS);
+        return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.UNSUCCESS);
     }
 
     @PostMapping("/delFlagNotice" )
     public Result delFlagNotice(String id) throws Exception{
         boolean isSuccess = noticeMessageService.deleteFlag(id);
-        return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.OPERATION_UNSUCCESS);
+        return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.UNSUCCESS);
     }
 
     private boolean checkMonitor(String monitorId) {

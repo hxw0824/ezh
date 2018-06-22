@@ -1,16 +1,10 @@
 package com.github.ezh.api.service.impl;
 
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
-import com.github.ezh.api.mapper.UserConfigMapper;
-import com.github.ezh.api.mapper.UserMapper;
-import com.github.ezh.api.model.dto.UserDto;
-import com.github.ezh.api.model.entity.User;
 import com.github.ezh.api.model.entity.UserConfig;
+import com.github.ezh.api.mapper.UserConfigMapper;
 import com.github.ezh.api.service.UserConfigService;
-import com.github.ezh.api.service.UserService;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserConfig> implements UserConfigService {

@@ -1,15 +1,6 @@
-package com.github.ezh.work.common.util;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-
-import java.util.Date;
+package com.github.ezh.common.util;
 
 public class Result {
-
-   /**
-     * 服务器时间.
-     */
-    private Date ServerTime;
 
     /**
      * 返回码.
@@ -29,7 +20,6 @@ public class Result {
 
     public Result(ReturnCode returnCode, Object data) {
         super();
-        this.ServerTime = new Date();
         this.code = returnCode.value();
         this.msg = returnCode.getReasonPhrase();
         this.data = data;
@@ -37,18 +27,8 @@ public class Result {
 
     public Result(ReturnCode returnCode) {
         super();
-        this.ServerTime = new Date();
         this.code = returnCode.value();
         this.msg = returnCode.getReasonPhrase();
-    }
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
-    public Date getServerTime() {
-        return ServerTime;
-    }
-
-    public void setServerTime(Date ServerTime) {
-        this.ServerTime = ServerTime;
     }
 
     public Integer getCode() {

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.CNoticeMapper">
+
+    <sql id="cNoticeColumns">
+        a.id AS "id",
+        a.office_id AS "officeId",
+        a.class_id AS "classId",
+        a.user_id AS "userId",
+        a.title AS "title",
+        a.content AS "content",
+        a.images AS "images",
+        a.create_date AS "createDate",
+        su.name AS "userName",
+        CASE
+            WHEN a.class_id = 'ALL' THEN "全园"
+            WHEN a.class_id = 'STUDENT' THEN "全体学生"
+            WHEN a.class_id = 'TEACHER' THEN "全体老师"
+            ELSE (select GROUP_CONCAT(n.name) from c_class n where FIND_IN_SET(n.id,a.class_id))
+        END AS "className"
+    </sql>
+
+    <sql id="cNoticeJoins">
+        LEFT JOIN sys_user su ON a.user_id = su.id
+    </sql>
+
+    <select id="getById" resultType="com.github.ezh.kinder.model.dto.CNoticeDto">
+        SELECT
+            <include refid="cNoticeColumns"/>
+        FROM c_notice a
+            <include refid="cNoticeJoins"/>
+        WHERE a.del_flag = 0
+        AND a.id = #{id}
+    </select>
+
+    <select id="getNoticeList" resultType="com.github.ezh.kinder.model.dto.CNoticeDto">
+        SELECT
+            <include refid="cNoticeColumns"/>,
+            <![CDATA[
+                CASE WHEN c.notice_id IS NULL THEN (
+                    CASE WHEN #{userType} = 3 OR #{obj.userId} = su.id THEN 1 ELSE 0 END
+                ) ELSE 1 END AS "isRead"
+            ]]>
+        FROM c_notice a
+            <include refid="cNoticeJoins"/>
+        LEFT JOIN (
+            SELECT
+                y.notice_id
+            FROM c_notice z
+            LEFT JOIN c_notice_user y ON z.id = y.notice_id
+            WHERE y.user_id = #{obj.userId}
+        ) c ON a.id = c.notice_id
+        WHERE a.del_flag = 0
+        AND a.office_id = #{obj.officeId}
+        <if test="obj.classId != null and obj.classId != ''">
+            AND ( FIND_IN_SET(#{obj.classId},a.class_id) OR a.class_id = 'ALL'
+            <if test="userType != null and userType == 4">
+                OR a.class_id = 'TEACHER'
+            </if>
+            <if test="userType != null and userType == 5">
+                OR a.class_id = 'STUDENT'
+            </if> )
+        </if>
+        ORDER BY a.create_date DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset},#{limit}
+        </if>
+    </select>
+
+    <select id="getReadStatusList" resultType="com.github.ezh.kinder.model.dto.ReadStatusDto">
+        SELECT
+            u.name,
+            u.image_id,
+            CASE WHEN x.user_id IS NULL THEN 0 ELSE 1 END AS "isRead"
+        FROM sys_user u
+        LEFT JOIN c_notice z ON 1 = 1
+        LEFT JOIN (
+            SELECT
+                a.user_id
+            FROM c_notice_user a
+            WHERE a.notice_id = #{obj.id}
+        ) x ON u.id = x.user_id
+        WHERE z.del_flag = 0
+        AND u.office_id = #{obj.officeId}
+        <if test="noticeType != null">
+            <if test="noticeType == 'STUDENT'">
+                AND u.user_type = 5
+            </if>
+            <if test="noticeType == 'TEACHER'">
+                AND u.user_type = 4
+            </if>
+            <if test="noticeType != 'STUDENT' and noticeType != 'TEACHER' and noticeType != 'ALL'">
+                AND FIND_IN_SET(u.class_id,#{noticeType})
+            </if>
+        </if>
+        AND z.id = #{obj.id}
+        <![CDATA[
+            AND u.create_date <= z.create_date
+            AND z.user_id <> u.id
+        ]]>
+        ORDER BY isRead DESC, u.user_type, u.id
+    </select>
+
+    <insert id="readNotice">
+        INSERT INTO c_notice_user (
+          id,
+          notice_id,
+          user_id
+        ) VALUE (
+          #{id},
+          #{noticeId},
+          #{userId}
+        )
+    </insert>
+
+    <update id="deleteFlag">
+        UPDATE c_notice SET
+          del_flag = 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteFlagUser">
+        UPDATE c_notice_user SET
+          del_flag = 1
+        WHERE notice_id = #{id}
+    </update>
+</mapper>

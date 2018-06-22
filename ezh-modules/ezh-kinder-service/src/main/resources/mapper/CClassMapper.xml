@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.CClassMapper">
+
+    <sql id="classColumns">
+		a.id AS "id",
+		a.office_id AS "officeId",
+		a.name AS "name",
+		a.period AS "period",
+		a.year AS "year",
+		a.teacher_id AS "teacherId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		o.name AS "officeName",
+		u.name AS "teacherName"
+	</sql>
+
+    <sql id="classJoins">
+		LEFT JOIN sys_office o ON a.office_id = o.id
+		LEFT JOIN sys_user u ON a.teacher_id = u.id
+	</sql>
+
+    <select id="get" resultType="com.github.ezh.kinder.model.dto.CClassDto">
+        SELECT
+        <include refid="classColumns"/>
+        FROM c_class a
+        <include refid="classJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="com.github.ezh.kinder.model.dto.CClassDto">
+        SELECT
+        <include refid="classColumns"/>
+        FROM c_class a
+        <include refid="classJoins"/>
+        <where>
+            a.del_flag = 0
+            <if test="name != null and name != ''">
+                AND a.name LIKE
+                <if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+                <if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+                <if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+            </if>
+        </where>
+        ORDER BY a.update_date DESC
+    </select>
+
+    <select id="findAllList" resultType="com.github.ezh.kinder.model.dto.CClassDto">
+        SELECT
+        <include refid="classColumns"/>
+        FROM c_class a
+        <include refid="classJoins"/>
+        <where>
+            a.del_flag = 0
+        </where>
+        ORDER BY a.update_date DESC
+    </select>
+
+    <select id="getByOfficeId" resultType="com.github.ezh.kinder.model.dto.CClassDto">
+        SELECT
+        <include refid="classColumns"/>
+        FROM c_class a
+        <include refid="classJoins"/>
+        WHERE a.office_id = #{officeId}
+        <if test="name != null and name != ''">
+            AND a.name LIKE
+            <if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+            <if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+            <if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+        </if>
+        <if test="period != null and period != ''">
+            AND a.period = #{period}
+        </if>
+        <if test="year != null and year != ''">
+            AND a.year = #{year}
+        </if>
+        <if test="teacherId != null and teacherId != ''">
+            AND a.teacher_id = #{teacherId}
+        </if>
+        ORDER BY a.period ,a.year
+    </select>
+
+    <!-- 根据教师ID获取班级 -->
+    <select id="getByTeacherId" resultType="com.github.ezh.kinder.model.dto.CClassDto">
+        SELECT
+        <include refid="classColumns"/>
+        FROM c_class a
+        <include refid="classJoins"/>
+        WHERE a.teacher_id = #{teacherId}
+    </select>
+</mapper>

@@ -2,9 +2,7 @@ package com.github.ezh.api.mapper;
 
 import com.baomidou.mybatisplus.mapper.BaseMapper;
 import com.github.ezh.api.model.dto.CBabyDto;
-import com.github.ezh.api.model.dto.UserDto;
 import com.github.ezh.api.model.entity.CBaby;
-import com.github.ezh.api.model.entity.User;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

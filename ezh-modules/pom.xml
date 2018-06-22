@@ -22,7 +22,7 @@
     <modules>
         <module>ezh-work-service</module>
         <module>ezh-test-service</module>
-        <module>ezh-mysql-service</module>
+        <module>ezh-kinder-service</module>
     </modules>
 
 </project>

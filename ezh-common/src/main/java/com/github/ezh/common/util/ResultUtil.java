@@ -1,4 +1,4 @@
-package com.github.ezh.api.common.util;
+package com.github.ezh.common.util;
 
 
 /**

@@ -2,7 +2,6 @@ package com.github.ezh.api.service.impl;
 
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.github.ezh.api.mapper.NoticeMessageMapper;
-import com.github.ezh.api.model.dto.ChatMessageDto;
 import com.github.ezh.api.model.dto.NoticeMessageDto;
 import com.github.ezh.api.model.entity.NoticeMessage;
 import com.github.ezh.api.service.NoticeMessageService;

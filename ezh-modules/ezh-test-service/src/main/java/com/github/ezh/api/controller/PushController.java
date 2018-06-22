@@ -1,20 +1,18 @@
 package com.github.ezh.api.controller;
 
 import com.gexin.rp.sdk.base.IPushResult;
-import com.github.ezh.api.common.util.*;
-import com.github.ezh.api.model.domain.NoticeMessageDomain;
 import com.github.ezh.api.model.domain.PushDomain;
 import com.github.ezh.api.model.domain.UserConfigDomain;
-import com.github.ezh.api.model.dto.NoticeMessageDto;
 import com.github.ezh.api.model.dto.UserDto;
 import com.github.ezh.api.model.entity.UserConfig;
 import com.github.ezh.api.service.CClassService;
 import com.github.ezh.api.service.NoticeMessageService;
-import com.github.ezh.api.service.UserConfigService;
 import com.github.ezh.api.service.UserService;
+import com.github.ezh.api.model.domain.NoticeMessageDomain;
+import com.github.ezh.api.model.dto.NoticeMessageDto;
+import com.github.ezh.api.service.UserConfigService;
 import com.github.ezh.common.bean.config.EzhConfig;
-import com.github.ezh.common.util.PushUtils;
-import com.github.ezh.common.util.RedisUtils;
+import com.github.ezh.common.util.*;
 import com.github.ezh.common.web.BaseController;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +62,7 @@ public class PushController extends BaseController {
      *  表现列表,通知列表
      */
     @GetMapping("/getNoticeList" )
-    public Result getNoticeList(NoticeMessageDomain domain,String isNum) {
+    public Result getNoticeList(NoticeMessageDomain domain, String isNum) {
         if(StringUtils.isBlank(domain.getType())){
             return ResultUtil.error(ReturnCode.PARAM_IS_ERROR);
         }
@@ -168,7 +166,7 @@ public class PushController extends BaseController {
             setRedis(RedisUtils.USER_LOGIN_CLIENT_STATUS + domain.getClientId(),domain.getUserId(),RedisUtils.SEVEN_DAYS);
             return ResultUtil.success();
         }else{
-            return ResultUtil.error(ReturnCode.OPERATION_UNSUCCESS);
+            return ResultUtil.error(ReturnCode.UNSUCCESS);
         }
     }
 

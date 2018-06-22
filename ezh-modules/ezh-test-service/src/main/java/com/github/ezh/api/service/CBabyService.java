@@ -1,10 +1,8 @@
 package com.github.ezh.api.service;
 
 import com.baomidou.mybatisplus.service.IService;
-import com.github.ezh.api.model.dto.CBabyDto;
-import com.github.ezh.api.model.dto.UserDto;
 import com.github.ezh.api.model.entity.CBaby;
-import com.github.ezh.api.model.entity.User;
+import com.github.ezh.api.model.dto.CBabyDto;
 
 import java.util.List;
 

@@ -42,20 +42,20 @@
             </exclusions>
         </dependency>
         <!--HikariCP连接池-->
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.shardingjdbc</groupId>
-            <artifactId>sharding-jdbc-core-spring-boot-starter</artifactId>
-            <version>${sharding-jdbc-core-spring-boot-starter.version}</version>
-        </dependency>
         <!--<dependency>-->
-            <!--<groupId>com.alibaba</groupId>-->
-            <!--<artifactId>druid</artifactId>-->
-            <!--<version>1.0.18</version>-->
+            <!--<groupId>com.zaxxer</groupId>-->
+            <!--<artifactId>HikariCP</artifactId>-->
         <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>io.shardingjdbc</groupId>-->
+            <!--<artifactId>sharding-jdbc-core-spring-boot-starter</artifactId>-->
+            <!--<version>${sharding-jdbc-core-spring-boot-starter.version}</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.0.18</version>
+        </dependency>
         <!--<dependency>-->
             <!--<groupId>io.shardingsphere</groupId>-->
             <!--<artifactId>sharding-jdbc</artifactId>-->

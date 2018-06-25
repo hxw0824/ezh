@@ -102,6 +102,9 @@ public class TaskController extends BaseKinderController {
         cTask.setType(domain.getType());
         cTask.setExplain(domain.getExplain());
         cTask.setCreateDate(new Date());
+        if(StringUtils.isNotBlank(domain.getAttach())){
+            cTask.setAttach(domain.getAttach());
+        }
 
         Long begin = domain.getBeginDate();
         Long end = domain.getEndDate();

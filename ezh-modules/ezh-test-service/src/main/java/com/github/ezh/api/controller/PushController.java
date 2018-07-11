@@ -1,18 +1,19 @@
 package com.github.ezh.api.controller;
 
-import com.gexin.rp.sdk.base.IPushResult;
-import com.github.ezh.api.model.domain.PushDomain;
+import com.github.ezh.api.model.domain.NoticeMessageDomain;
 import com.github.ezh.api.model.domain.UserConfigDomain;
+import com.github.ezh.api.model.dto.NoticeMessageDto;
 import com.github.ezh.api.model.dto.UserDto;
 import com.github.ezh.api.model.entity.UserConfig;
 import com.github.ezh.api.service.CClassService;
 import com.github.ezh.api.service.NoticeMessageService;
-import com.github.ezh.api.service.UserService;
-import com.github.ezh.api.model.domain.NoticeMessageDomain;
-import com.github.ezh.api.model.dto.NoticeMessageDto;
 import com.github.ezh.api.service.UserConfigService;
+import com.github.ezh.api.service.UserService;
 import com.github.ezh.common.bean.config.EzhConfig;
-import com.github.ezh.common.util.*;
+import com.github.ezh.common.util.RedisUtils;
+import com.github.ezh.common.util.Result;
+import com.github.ezh.common.util.ResultUtil;
+import com.github.ezh.common.util.ReturnCode;
 import com.github.ezh.common.web.BaseController;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,61 +192,61 @@ public class PushController extends BaseController {
         return ResultUtil.success();
     }
 
-    @PostMapping("/chatMessage" )
-    public Result chatMessage(PushDomain domain) throws Exception {
-        if(StringUtils.isAnyBlank(domain.getUserId(),domain.getClientId(),domain.getText())){
-            return ResultUtil.error(ReturnCode.PARAM_IS_ERROR);
-        }
-        if (!checkUser(domain.getUserId())) {
-            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
-        }
-        UserDto user = userService.getById(domain.getUserId());
-        UserConfig userConfig = userConfigService.getByClientId(domain.getClientId());
-        IPushResult res = PushUtils.pushToSingle(userConfig.getMobileType(),domain.getClientId(),ezhConfig.getAppName(),user.getName() + "：" + domain.getText(),"","","");
-        System.out.println(res.getResponse().toString());
-        return ResultUtil.success(res.getResponse());
-    }
+//    @PostMapping("/chatMessage" )
+//    public Result chatMessage(PushDomain domain) throws Exception {
+//        if(StringUtils.isAnyBlank(domain.getUserId(),domain.getClientId(),domain.getText())){
+//            return ResultUtil.error(ReturnCode.PARAM_IS_ERROR);
+//        }
+//        if (!checkUser(domain.getUserId())) {
+//            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
+//        }
+//        UserDto user = userService.getById(domain.getUserId());
+//        UserConfig userConfig = userConfigService.getByClientId(domain.getClientId());
+//        IPushResult res = PushUtils.pushToSingle(userConfig.getMobileType(),domain.getClientId(),ezhConfig.getAppName(),user.getName() + "：" + domain.getText(),"","","");
+//        System.out.println(res.getResponse().toString());
+//        return ResultUtil.success(res.getResponse());
+//    }
 
-    @PostMapping("/pushNoticeShow" )
-    public Result pushNoticeShow(PushDomain domain) throws Exception {
-        if(StringUtils.isAnyBlank(domain.getUserId(),domain.getText())){
-            return ResultUtil.error(ReturnCode.PARAM_IS_ERROR);
-        }
-        if (!checkUser(domain.getUserId())) {
-            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
-        }
-        StringBuffer clientStr = new StringBuffer("");
-        UserDto user = userService.getById(domain.getUserId());
-        List<UserDto> userList = new CopyOnWriteArrayList<UserDto>();
-        String type = "（新通知）";
-        if(user.getUserType().equals(UserDto.USER_TYPE_KIND)){
-            userList = userService.getByAny(null,user.getOfficeId(),null,user.getId());
-        }else if(user.getUserType().equals(UserDto.USER_TYPE_TEACHER)){
-            type = "（新表现）";
-            userList = userService.getByAny(UserDto.USER_TYPE_PARENT,user.getOfficeId(),user.getClassId(),null);
-        }
-
-        if(userList != null && userList.size() > 0){
-//            for(UserDto ud : userList){
-//                if(ud.getUserConfig() != null) {
-//                    if(StringUtils.isNotBlank(ud.getUserConfig().getClientId())){
-//                        clientStr.append(ud.getUserConfig().getClientId());
-//                        clientStr.append(",");
-//                    }
-//                }
+//    @PostMapping("/pushNoticeShow" )
+//    public Result pushNoticeShow(PushDomain domain) throws Exception {
+//        if(StringUtils.isAnyBlank(domain.getUserId(),domain.getText())){
+//            return ResultUtil.error(ReturnCode.PARAM_IS_ERROR);
+//        }
+//        if (!checkUser(domain.getUserId())) {
+//            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
+//        }
+//        StringBuffer clientStr = new StringBuffer("");
+//        UserDto user = userService.getById(domain.getUserId());
+//        List<UserDto> userList = new CopyOnWriteArrayList<UserDto>();
+//        String type = "（新通知）";
+//        if(user.getUserType().equals(UserDto.USER_TYPE_KIND)){
+//            userList = userService.getByAny(null,user.getOfficeId(),null,user.getId());
+//        }else if(user.getUserType().equals(UserDto.USER_TYPE_TEACHER)){
+//            type = "（新表现）";
+//            userList = userService.getByAny(UserDto.USER_TYPE_PARENT,user.getOfficeId(),user.getClassId(),null);
+//        }
+//
+//        if(userList != null && userList.size() > 0){
+////            for(UserDto ud : userList){
+////                if(ud.getUserConfig() != null) {
+////                    if(StringUtils.isNotBlank(ud.getUserConfig().getClientId())){
+////                        clientStr.append(ud.getUserConfig().getClientId());
+////                        clientStr.append(",");
+////                    }
+////                }
+////            }
+//            if(clientStr.length() > 0) {
+//                clientStr.deleteCharAt(clientStr.length() - 1);
+//                IPushResult res = PushUtils.pushToList(clientStr.toString(), ezhConfig.getAppName() + type, user.getName() + "：" + domain.getText(), "icon.png", "", "");
+//                System.out.println(res.getResponse().toString());
+//                return ResultUtil.success(res.getResponse());
+//            }else{
+//                return ResultUtil.error(ReturnCode.NOT_FOUND_PUSH_USER);
 //            }
-            if(clientStr.length() > 0) {
-                clientStr.deleteCharAt(clientStr.length() - 1);
-                IPushResult res = PushUtils.pushToList(clientStr.toString(), ezhConfig.getAppName() + type, user.getName() + "：" + domain.getText(), "icon.png", "", "");
-                System.out.println(res.getResponse().toString());
-                return ResultUtil.success(res.getResponse());
-            }else{
-                return ResultUtil.error(ReturnCode.NOT_FOUND_PUSH_USER);
-            }
-        }
-
-        return ResultUtil.error(ReturnCode.ERROR);
-    }
+//        }
+//
+//        return ResultUtil.error(ReturnCode.ERROR);
+//    }
 
     private boolean checkClient(String clientId) {
         if (StringUtils.isBlank(clientId)) {

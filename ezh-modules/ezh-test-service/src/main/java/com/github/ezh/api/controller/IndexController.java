@@ -3,6 +3,7 @@ package com.github.ezh.api.controller;
 import com.github.ezh.api.model.domain.*;
 import com.github.ezh.api.model.dto.*;
 import com.github.ezh.api.model.entity.*;
+import com.github.ezh.api.model.vo.CBabyVo;
 import com.github.ezh.api.service.*;
 import com.github.ezh.common.bean.config.EzhConfig;
 import com.github.ezh.common.bean.config.QiniuPropertiesConfig;
@@ -841,8 +842,9 @@ public class IndexController extends BaseController {
 
     //其他服务调用
     @GetMapping("/getCBaby/{id}" )
-    public CBabyDto findUserByUsername(@PathVariable String id) {
-        return cBabyService.getById(id);
+    public CBabyVo getCBaby(@PathVariable String id) {
+        CBabyVo cBabyVo = new CBabyVo(cBabyService.getById(id));
+        return cBabyVo;
     }
 
     private boolean checkMonitor(String monitorId) {

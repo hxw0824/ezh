@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableAutoConfiguration
-//@EnableFeignClients
+@EnableFeignClients
 @ImportResource(locations = { "classpath:druid-bean.xml" })
 @ComponentScan(basePackages = {"com.github.ezh.kinder","com.github.ezh.common.bean"})
 public class EzhKinderServiceApplication {

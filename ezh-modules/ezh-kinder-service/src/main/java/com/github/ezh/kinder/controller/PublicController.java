@@ -6,14 +6,12 @@ import cn.jpush.api.push.model.audience.Audience;
 import com.github.ezh.common.bean.config.EzhConfig;
 import com.github.ezh.common.entity.JPushData;
 import com.github.ezh.common.util.*;
-import com.github.ezh.kinder.feign.EzhTestService;
 import com.github.ezh.kinder.model.domain.CRelationDomain;
 import com.github.ezh.kinder.model.domain.UserConfigDomain;
 import com.github.ezh.kinder.model.domain.UserDomain;
 import com.github.ezh.kinder.model.dto.*;
 import com.github.ezh.kinder.model.entity.*;
 import com.github.ezh.kinder.model.vo.BirthdayReminder;
-import com.github.ezh.kinder.model.vo.CBabyVo;
 import com.github.ezh.kinder.model.vo.UserInfo;
 import com.github.ezh.kinder.service.*;
 import com.google.common.collect.Lists;
@@ -58,9 +56,6 @@ public class PublicController extends BaseKinderController {
 
     @Autowired
     private TreasuryService treasuryService;
-
-//    @Autowired
-//    private EzhTestService ezhTestService;
 
     @Autowired
     private EzhConfig EzhConfig;
@@ -348,8 +343,6 @@ public class PublicController extends BaseKinderController {
         if(checkUser(domain.getUserId()) || checkUser(domain.getHandleUserId())){
             return ResultUtil.error(ReturnCode.ID_NOT_VALID);
         }
-//        CBabyVo cBabyVo = ezhTestService.getCBaby("111");
-//        System.out.println(cBabyVo);
         UserDto user = getUser(domain.getUserId());
         UserConfig ucf = userConfigService.getByUserId(domain.getHandleUserId());
         if(ucf != null){

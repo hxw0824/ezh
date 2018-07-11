@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.CBabyMapper">
+
+    <sql id="cBabyColumns">
+        a.id AS "id",
+        a.office_id AS "officeId",
+        a.class_id AS "classId",
+        a.user_id AS "userId",
+        a.text AS "text",
+        a.img_id AS "imgId",
+        a.create_date AS "createDate",
+        u.name AS "userName",
+        u.image_id AS "userImageId"
+	</sql>
+
+    <sql id="cBabyJoins">
+        LEFT JOIN sys_user u ON u.id = a.user_id
+	</sql>
+
+    <select id="getById" resultType="com.github.ezh.kinder.model.dto.CBabyDto">
+        SELECT
+        <include refid="cBabyColumns"/>
+        FROM c_baby a
+        <include refid="cBabyJoins"/>
+        WHERE a.del_flag = 0
+        AND a.id = #{id}
+    </select>
+
+    <select id="getList" resultType="com.github.ezh.kinder.model.dto.CBabyDto">
+        SELECT
+            x.id AS "id",
+            x.office_id AS "officeId",
+            x.class_id AS "classId",
+            x.user_id AS "userId",
+            x.text AS "text",
+            x.img_id AS "imgId",
+            x.create_date AS "createDate",
+            x.name AS "userName",
+            x.image_id AS "userImageId",
+            x.className AS "className",
+            <if test="userId != null and userId != ''">
+                <![CDATA[
+                    CASE WHEN FIND_IN_SET(#{userId},x.goodUserStr) > 0 THEN 1 ELSE 0 END AS "isLike",
+                ]]>
+            </if>
+            GROUP_CONCAT(z.name ORDER BY FIND_IN_SET(z.id,x.goodUserStr)) AS "likeUserNames"
+        FROM (
+            SELECT
+                a.id,
+                a.office_id,
+                a.class_id,
+                a.user_id,
+                a.text,
+                a.img_id,
+                a.create_date,
+                u.name,
+                u.image_id,
+                cc.name AS "className",
+                GROUP_CONCAT(cr.user_id ORDER BY cr.create_date) AS "goodUserStr"
+            FROM c_baby a
+            LEFT JOIN c_relation cr ON (cr.handle_id = a.id AND cr.type = 1 AND cr.del_flag = 0)
+            LEFT JOIN sys_user u ON u.id = a.user_id
+            LEFT JOIN c_class cc ON a.class_id = cc.id
+            WHERE a.del_flag = 0
+            AND a.office_id = #{officeId}
+            <if test="classId != null and classId != ''">
+                AND a.class_id = #{classId}
+            </if>
+            GROUP BY a.id
+        ) x LEFT JOIN sys_user z ON FIND_IN_SET(z.id,x.goodUserStr)
+        GROUP BY x.id
+        ORDER BY x.create_date DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset},#{limit}
+        </if>
+    </select>
+    
+    <update id="deleteFlag">
+        UPDATE c_baby SET
+          del_flag = 1
+        WHERE id = #{id}
+    </update>
+</mapper>

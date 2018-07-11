@@ -21,6 +21,11 @@ public class CTaskServiceImpl extends ServiceImpl<CTaskMapper, CTask> implements
     }
 
     @Override
+    public CTaskUser getTaskUserById(String id) {
+        return baseMapper.getTaskUserById(id);
+    }
+
+    @Override
     public CopyOnWriteArrayList<CTaskDto> getTaskList(CTask cTask, Integer offset, Integer limit) {
         return baseMapper.getTaskList(cTask,offset,limit);
     }

@@ -7,44 +7,65 @@ import com.baomidou.mybatisplus.annotations.TableName;
 import com.baomidou.mybatisplus.enums.IdType;
 
 import java.io.Serializable;
+import java.util.Date;
 
 @TableName("sys_user" )
 public class User extends Model<User> {
 
     @TableId(value = "id", type = IdType.UUID)
     private String id;
-    @TableField("office_id" )
-    private String officeId;        // 学校id
-    @TableField("class_id" )
-    private String classId;        // 班级id
-    @TableField("period_id" )
+    private String officeId;
+    private String classId;
     private String periodId;
-    @TableField("user_token" )
-    private String userToken;        // user_token
-    @TableField("login_name" )
     private String loginName;
-    @TableField("password" )
     private String password;
-    @TableField("name" )
     private String name;
-    @TableField("email" )
+    private String sex;
+    private Date birth;
     private String email;
-    @TableField("mobile" )
+    private String phone;
     private String mobile;
-    @TableField("user_type" )
     private String userType;
-    @TableField("image_id" )
     private String imageId;
-    @TableField("photo" )
-    private String photo;
-    @TableField("remarks" )
-    private String remarks;
+    private String firstLogin;
 
     public User() {
     }
 
     public User(String id) {
         this.id = id;
+    }
+
+    public String getFirstLogin() {
+        return firstLogin;
+    }
+
+    public void setFirstLogin(String firstLogin) {
+        this.firstLogin = firstLogin;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public Date getBirth() {
+        return birth;
+    }
+
+    public void setBirth(Date birth) {
+        this.birth = birth;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getId() {
@@ -77,14 +98,6 @@ public class User extends Model<User> {
 
     public void setPeriodId(String periodId) {
         this.periodId = periodId;
-    }
-
-    public String getUserToken() {
-        return userToken;
-    }
-
-    public void setUserToken(String userToken) {
-        this.userToken = userToken;
     }
 
     public String getLoginName() {
@@ -143,21 +156,6 @@ public class User extends Model<User> {
         this.imageId = imageId;
     }
 
-    public String getPhoto() {
-        return photo;
-    }
-
-    public void setPhoto(String photo) {
-        this.photo = photo;
-    }
-
-    public String getRemarks() {
-        return remarks;
-    }
-
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
-    }
 
     @Override
     protected Serializable pkVal() {

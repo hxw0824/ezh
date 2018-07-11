@@ -1,6 +1,5 @@
 package com.github.ezh.api.controller;
 
-import com.gexin.rp.sdk.base.uitls.RandomUtil;
 import com.github.ezh.api.model.domain.*;
 import com.github.ezh.api.model.dto.*;
 import com.github.ezh.api.model.entity.*;
@@ -29,10 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -91,9 +89,12 @@ public class IndexController extends BaseController {
 
     private UserDto user = null;
 
-    public static final Long TELSMS_EXPIRE = 60 * 1000L;
+    public static final Long TELSMS_EXPIRE_SIXTY_SEC = 60 * 1000L;
+    public static final Long TELSMS_EXPIRE_TIRTY_MIN = 30 * 60 * 1000L;
     public static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd" );
     public static final String TELNUM = "139,138,137,136,135,134,147,188,187,184,183,182,178,159,158,157,152,151,150,186,185,176,145,156,155,132,131,130,189,181,180,177,153,133,189,133,173";
+    public static final String IMAGE_FILE_TYPE = "jpg,png,jpeg,gif";
+    public static List<String> MAGE_FILE_LIST = Arrays.asList(IMAGE_FILE_TYPE.split(","));
 
     /*
      *   获取用户信息
@@ -103,6 +104,7 @@ public class IndexController extends BaseController {
         if (!checkUser(domain.getUserId())) {
             return ResultUtil.error(ReturnCode.ID_NOT_VALID);
         }
+        user.setPassword(null);
         return ResultUtil.success(user);
     }
 
@@ -379,21 +381,25 @@ public class IndexController extends BaseController {
     }
 
     /**
-     * 找回密码
-     * @param mobile
+     * 获取验证码
+     * @param userId
      * @return
      * @throws Exception
      */
-    @PostMapping("/forgetPwd" )
-    public Result forgetPwd(String mobile) throws Exception {
-        if (checkExpire(mobile)){
+    @PostMapping("/getTelSms" )
+    public Result getTelSms(String userId,String type) throws Exception {
+        if(StringUtils.isAnyBlank(userId,type)){
+            return ResultUtil.error(ReturnCode.PARAM_IS_ERROR);
+        }
+        if (!checkUser(userId)) {
+            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
+        }
+        if(!type.equals(Telsms.TYPE_UPDATE_PASSWORD)){
+            return ResultUtil.error(ReturnCode.VERIFYCODE_TYPE_ERROR);
+        }
+        String mobile = user.getMobile();
+        if (checkSixtyExpire(mobile,type)){
             return ResultUtil.error(ReturnCode.SEND_VERIFYCODE_NOT_VALID);
-        }
-        if (checkMobile(mobile)) {
-            return ResultUtil.error(ReturnCode.PHONE_NOT_VALID);
-        }
-        if (checkUserTel(mobile)) {
-            return ResultUtil.error(ReturnCode.USER_NOT_FOUND);
         }
         try {
             String code = String.valueOf((int) (Math.random() * 10000));
@@ -402,14 +408,14 @@ public class IndexController extends BaseController {
                 zero = "0" + zero;
             }
             code = zero + code;
-            if (TelUtil.sendSMS(mobile, code,new SMSUtil(ClienEnum.EZH_YOUJIAO))) {
+            if (TelUtil.sendSMS(mobile,type.equals(Telsms.TYPE_FORGET_PASSWORD) ? "找回密码" : "修改密码", code,new SMSUtil(ClienEnum.EZH_YOUJIAO))) {
                 Telsms telsms = new Telsms();
                 telsms.setPhone(mobile);
                 telsms.setCode(code);
-                telsms.setType(Telsms.TYPE_FORGET_PASSWORD);
+                telsms.setType(type);
                 telsms.setCreateDate(new Date());
                 telsmsService.insert(telsms);
-                return ResultUtil.success();
+                return ResultUtil.success(mobile);
             }else{
                 return ResultUtil.error(ReturnCode.SEND_VERIFYCODE_ERROR);
             }
@@ -419,30 +425,48 @@ public class IndexController extends BaseController {
         }
     }
 
-    /**
-     * 校检验证码
+    /*
+     *   修改密码
      */
-    @PostMapping("/telsmsValid" )
-    public Result telsmsValid(String mobile,String code) throws Exception {
-        if (checkMobile(mobile)) {
-            return ResultUtil.error(ReturnCode.PHONE_NOT_VALID);
+    @PostMapping("/updatePwd" )
+    public Result updatePwd(PasswordDomain domain) {
+        if(StringUtils.isAnyBlank(domain.getCode(),domain.getPassword(),domain.getNewPassword())){
+            return ResultUtil.error(ReturnCode.PARAM_NOT_VALID);
         }
-        if (checkUserTel(mobile)) {
-            return ResultUtil.error(ReturnCode.USER_NOT_FOUND);
+        if (!checkUser(domain.getUserId())) {
+            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
         }
-        List<Telsms> list = telsmsService.getByPhone(mobile);
-        if(list != null && list.size() > 0){
-            Long lastSendDate = list.get(0).getCreateDate().getTime();
-            if (new Date().getTime() - lastSendDate > TELSMS_EXPIRE) {
-                return ResultUtil.error(ReturnCode.VERIFYCODE_IS_NOT_INVALID);
+        ReturnCode returnCode = telsmsValid(user.getMobile(),domain.getCode(),Telsms.TYPE_UPDATE_PASSWORD);
+        if(returnCode != ReturnCode.SUCCESS){
+            return ResultUtil.error(returnCode);
+        }
+        if (SecurityUtils.matchPwd(domain.getPassword(), user.getPassword())) {
+            User us = new User(domain.getUserId());
+            us.setPassword(SecurityUtils.encodePwd(domain.getNewPassword()));
+            us.setFirstLogin(UserDto.USER_FIRSTLOGIN_NO);
+            userService.updateInfo(us);
+            telsmsService.delTelsms(user.getMobile(),Telsms.TYPE_UPDATE_PASSWORD);
+            return ResultUtil.success();
+        } else {
+            return ResultUtil.error(ReturnCode.OLD_PASSWORD_IS_ERROR);
+        }
+    }
+
+    public ReturnCode telsmsValid(String mobile,String code,String type){
+        Telsms telsms = telsmsService.getLastByPhone(mobile,type);
+        if (telsms != null) {
+            Long lastSendDate = telsms.getCreateDate().getTime();
+            if (new Date().getTime() - lastSendDate > TELSMS_EXPIRE_TIRTY_MIN) {
+                return ReturnCode.VERIFYCODE_IS_NOT_INVALID;
             }
-            if(list.get(0).getCode().equals(code)){
-                return ResultUtil.success();
+            if(telsms.getCode().equals(code)){
+                return ReturnCode.SUCCESS;
             }else{
-                return ResultUtil.error(ReturnCode.VERIFYCODE_NOT_CORRECT);
+                return ReturnCode.VERIFYCODE_NOT_CORRECT;
             }
+        }else{
+            return ReturnCode.VERIFYCODE_VALID_ERROR;
         }
-        return ResultUtil.error(ReturnCode.ERROR);
     }
 
     /**
@@ -459,30 +483,11 @@ public class IndexController extends BaseController {
         if (checkUserTel(mobile)) {
             return ResultUtil.error(ReturnCode.USER_NOT_FOUND);
         }
-        User user1 = userService.getByMobile(mobile);
-        user1.setPassword(SecurityUtils.encodePwd(newPassword));
-        boolean isSuccess = userService.updatePwdByMobile(user1);
+        User us = new User();
+        us.setMobile(mobile);
+        us.setPassword(SecurityUtils.encodePwd(newPassword));
+        boolean isSuccess = userService.updatePwdByMobile(us);
         return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.UNSUCCESS);
-    }
-
-    /*
-     *   修改密码
-     */
-    @PostMapping("/updatePwd" )
-    public Result updatePwd(PasswordDomain domain) {
-        if(StringUtils.isAnyBlank(domain.getPassword(),domain.getNewPassword())){
-            return ResultUtil.error(ReturnCode.PARAM_NOT_VALID);
-        }
-        if (!checkUser(domain.getUserId())) {
-            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
-        }
-        if (SecurityUtils.matchPwd(domain.getPassword(), user.getPassword())) {
-            user.setPassword(SecurityUtils.encodePwd(domain.getNewPassword()));
-            userService.updatePwd(user);
-            return ResultUtil.success(ReturnCode.SUCCESS);
-        } else {
-            return ResultUtil.error(ReturnCode.OLD_PASSWORD_IS_ERROR);
-        }
     }
 
     /*
@@ -509,7 +514,7 @@ public class IndexController extends BaseController {
             if (!user.getUserType().equals(UserDto.USER_TYPE_KIND)) {
                 monitor.setClassId(user.getClassId());
                 resultMap = new ConcurrentHashMap<String,Object>();
-                resultMap.put("title",user.getCclass().getName());
+                resultMap.put("title",user.getClassName());
                 resultMap.put("items",monitorService.getList(monitor));
                 list.add(resultMap);
             }else{
@@ -557,7 +562,7 @@ public class IndexController extends BaseController {
                 delRedis(RedisUtils.OFFICE_CLASS_MONITOR_LIST + monitor.getOfficeId() + "_" + monitor.getClassId());
             }else{
                 CClass cclass = new CClass();
-                cclass.setOfficeId(user.getOffice().getId());
+                cclass.setOfficeId(user.getOfficeId());
                 List<CClassDto> cclassList = cClassService.getByOfficeId(cclass);
                 if(cclassList != null && cclassList.size() > 0){
                     for (CClass cClass2 : cclassList) {
@@ -622,7 +627,12 @@ public class IndexController extends BaseController {
             return ResultUtil.error(ReturnCode.ID_NOT_VALID);
         }
         List<CBabyDto> list = new CopyOnWriteArrayList<CBabyDto>();
-        list = cBabyService.getList(user.getUserType(), user.getOfficeId(), user.getClassId() != null ? user.getClassId() : "", (domain.getOffset() - 1) * domain.getLimit(), domain.getLimit());
+        list = cBabyService.getList(user.getUserType(), user.getOfficeId(), domain.getClassId() != null ? domain.getClassId() : user.getClassId(), (domain.getOffset() - 1) * domain.getLimit(), domain.getLimit());
+        UserConfig uConfig = userConfigService.getByUserId(domain.getUserId());
+        if(uConfig != null) {
+            uConfig.setClassNum(list.size());
+            userConfigService.updateByUserId(uConfig);
+        }
         return ResultUtil.success(list);
     }
 
@@ -678,39 +688,55 @@ public class IndexController extends BaseController {
         }
     }*/
 
-
-    @PostMapping("/uploadPic")
-    public Result upload(@RequestParam("file") MultipartFile file,String userId,String type) {
+    @PostMapping("/uploadFiles")
+    public Result uploadFiles(MultipartFile[] files,String userId) throws Exception{
         if (!checkUser(userId)) {
             return ResultUtil.error(ReturnCode.ID_NOT_VALID);
         }
-        if(file == null){
+        if(files == null || files.length < 1){
             return ResultUtil.error(ReturnCode.UPLOAD_FILE_IS_NULL);
         }
-        String fileExt = FileUtil.extName(file.getOriginalFilename());
+        String qiniuPath = "";
+        CopyOnWriteArrayList<String> resultList = new CopyOnWriteArrayList<>();
+        for(MultipartFile file : files){
+            if (file != null) {
+                String originName = file.getOriginalFilename();
+                if (originName.trim() != "") {
+                    String fileExt = FileUtil.extName(file.getOriginalFilename());
+                    String uuid = getUUID();
+                    String key = userId + "/" + uuid + "." + fileExt;
+                    qiniuPath = uploadFile(file.getInputStream(),ezhConfig.getUploadPath() + uuid + "." + fileExt,key,fileExt);
+                    if(StringUtils.isNotBlank(qiniuPath)) {
+                        System.out.println(key + " >>>>>>>> " + qiniuPath);
+                        resultList.add(qiniuPath);
+                    }
+                }
+            }
+        }
+        return ResultUtil.success(resultList);
+    }
+
+    private String uploadFile(InputStream input,String zipPath,String key,String fileExt){
+        String resultPath = null;
         //构造一个带指定Zone对象的配置类
         Configuration cfg = new Configuration(Zone.zone1());
         UploadManager uploadManager = new UploadManager(cfg);
-        String uuid = RandomUtil.randomUUID();
-        String key = userId + "/" + uuid + "." + fileExt;
-        boolean isSuccess = false;
         try {
             File uploadPath = new File(ezhConfig.getUploadPath());
             if(!uploadPath.exists())uploadPath.mkdirs();
-
-            Thumbnails.of(file.getInputStream()).scale(1f).outputQuality(0.25f).toFile(ezhConfig.getUploadPath() + uuid + "." + fileExt);
-            System.out.println(ezhConfig.getUploadPath() + uuid + "." + fileExt);
-//            Response response = uploadManager.put(ezhConfig.getUploadPath() + uuid + "." + fileExt, key,
-//                    Auth.create(qiniuPropertiesConfig.getAccessKey(), qiniuPropertiesConfig.getSecretKey()).uploadToken(qiniuPropertiesConfig.getBucket()), null, null);
-            Response response = uploadManager.put(ezhConfig.getUploadPath() + uuid + "." + fileExt,key,
-                    Auth.create(qiniuPropertiesConfig.getAccessKey(), qiniuPropertiesConfig.getSecretKey()).uploadToken(qiniuPropertiesConfig.getBucket()));
-
-
+            Response response = null;
+            if(MAGE_FILE_LIST.contains(fileExt.toLowerCase())) {
+                Thumbnails.of(input).scale(1f).outputQuality(0.25f).toFile(zipPath);
+                System.out.println("图片压缩 >>>>>>> " + zipPath);
+                response = uploadManager.put(zipPath,key,Auth.create(qiniuPropertiesConfig.getAccessKey(),
+                        qiniuPropertiesConfig.getSecretKey()).uploadToken(qiniuPropertiesConfig.getBucket()));
+            }else{
+                response = uploadManager.put(input,key,Auth.create(qiniuPropertiesConfig.getAccessKey(),
+                        qiniuPropertiesConfig.getSecretKey()).uploadToken(qiniuPropertiesConfig.getBucket()),null,null);
+            }
             //解析上传成功的结果
             DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
-            System.out.println(putRet.key);
-            System.out.println(putRet.hash);
-            isSuccess = true;
+            resultPath = qiniuPropertiesConfig.getQiniuHost() + "/" + key;
         } catch (QiniuException ex) {
             Response r = ex.response;
             System.err.println(r.toString());
@@ -722,30 +748,84 @@ public class IndexController extends BaseController {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            File tempFile = new File(ezhConfig.getUploadPath() + uuid + "." + fileExt);
+            File tempFile = new File(zipPath);
             if(tempFile.exists()){
                 tempFile.delete();
             }
         }
-        if(isSuccess) {
-            if (type.equals("photo")) {
-                user.setImageId(qiniuPropertiesConfig.getQiniuHost() + "/" + key);
-                if (userService.updateImageId(user)) {
-                    List<UserDto> userList = userService.getByAny(null, user.getOfficeId(), null, null);
-                    if (userList != null && userList.size() > 0) {
-                        for (User user1 : userList) {
-                            delRedis(RedisUtils.ADDRESS_LIST_USERID + user1.getId());
-                            delRedis(RedisUtils.CLASS_LIST_USERID + user1.getId());
-                        }
-                    }
-                }
-            }
-            return ResultUtil.success(qiniuPropertiesConfig.getQiniuHost()+ "/" + key);
-        }else{
-            return ResultUtil.error(ReturnCode.UPLOAD_PIC_ERROR);
-        }
+        return resultPath;
     }
 
+    public static String getUUID(){
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+
+//    @PostMapping("/uploadPic")
+//    public Result upload(@RequestParam("file") MultipartFile file,String userId,String type) {
+//        if (!checkUser(userId)) {
+//            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
+//        }
+//        if(file == null){
+//            return ResultUtil.error(ReturnCode.UPLOAD_FILE_IS_NULL);
+//        }
+//        String fileExt = FileUtil.extName(file.getOriginalFilename());
+//        //构造一个带指定Zone对象的配置类
+//        Configuration cfg = new Configuration(Zone.zone1());
+//        UploadManager uploadManager = new UploadManager(cfg);
+//        String uuid = RandomUtil.randomUUID();
+//        String key = userId + "/" + uuid + "." + fileExt;
+//        boolean isSuccess = false;
+//        try {
+//            File uploadPath = new File(ezhConfig.getUploadPath());
+//            if(!uploadPath.exists())uploadPath.mkdirs();
+//
+//            Thumbnails.of(file.getInputStream()).scale(1f).outputQuality(0.25f).toFile(ezhConfig.getUploadPath() + uuid + "." + fileExt);
+//            System.out.println(ezhConfig.getUploadPath() + uuid + "." + fileExt);
+////            Response response = uploadManager.put(ezhConfig.getUploadPath() + uuid + "." + fileExt, key,
+////                    Auth.create(qiniuPropertiesConfig.getAccessKey(), qiniuPropertiesConfig.getSecretKey()).uploadToken(qiniuPropertiesConfig.getBucket()), null, null);
+//            Response response = uploadManager.put(ezhConfig.getUploadPath() + uuid + "." + fileExt,key,
+//                    Auth.create(qiniuPropertiesConfig.getAccessKey(), qiniuPropertiesConfig.getSecretKey()).uploadToken(qiniuPropertiesConfig.getBucket()));
+//
+//
+//            //解析上传成功的结果
+//            DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+//            System.out.println(putRet.key);
+//            System.out.println(putRet.hash);
+//            isSuccess = true;
+//        } catch (QiniuException ex) {
+//            Response r = ex.response;
+//            System.err.println(r.toString());
+//            try {
+//                System.err.println(r.bodyString());
+//            } catch (QiniuException ex2) {
+//                //ignore
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            File tempFile = new File(ezhConfig.getUploadPath() + uuid + "." + fileExt);
+//            if(tempFile.exists()){
+//                tempFile.delete();
+//            }
+//        }
+//        if(isSuccess) {
+//            if (type.equals("photo")) {
+//                user.setImageId(qiniuPropertiesConfig.getQiniuHost() + "/" + key);
+//                if (userService.updateImageId(user)) {
+//                    List<UserDto> userList = userService.getByAny(null, user.getOfficeId(), null, null);
+//                    if (userList != null && userList.size() > 0) {
+//                        for (User user1 : userList) {
+//                            delRedis(RedisUtils.ADDRESS_LIST_USERID + user1.getId());
+//                            delRedis(RedisUtils.CLASS_LIST_USERID + user1.getId());
+//                        }
+//                    }
+//                }
+//            }
+//            return ResultUtil.success(qiniuPropertiesConfig.getQiniuHost()+ "/" + key);
+//        }else{
+//            return ResultUtil.error(ReturnCode.UPLOAD_PIC_ERROR);
+//        }
+//    }
 
     @PostMapping("/delFlagBaby" )
     public Result delFlagBaby(String id) throws Exception{
@@ -757,6 +837,12 @@ public class IndexController extends BaseController {
     public Result delFlagNotice(String id) throws Exception{
         boolean isSuccess = noticeMessageService.deleteFlag(id);
         return isSuccess ? ResultUtil.success() : ResultUtil.error(ReturnCode.UNSUCCESS);
+    }
+
+    //其他服务调用
+    @GetMapping("/getCBaby/{id}" )
+    public CBabyDto findUserByUsername(@PathVariable String id) {
+        return cBabyService.getById(id);
     }
 
     private boolean checkMonitor(String monitorId) {
@@ -795,14 +881,14 @@ public class IndexController extends BaseController {
         return false;
     }
 
-    private boolean checkExpire(String mobile) {
+    private boolean checkSixtyExpire(String mobile,String type) {
         if (StringUtils.isBlank(mobile)) {
             return true;
         }
-        List<Telsms> list = telsmsService.getByPhone(mobile);
-        if (list != null && list.size() > 0) {
-            Long lastSendDate = list.get(0).getCreateDate().getTime();
-            if (new Date().getTime() - lastSendDate < TELSMS_EXPIRE) {
+        Telsms telsms = telsmsService.getLastByPhone(mobile,type);
+        if (telsms != null) {
+            Long lastSendDate = telsms.getCreateDate().getTime();
+            if (new Date().getTime() - lastSendDate < TELSMS_EXPIRE_SIXTY_SEC) {
                 return true;
             }
         }

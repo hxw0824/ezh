@@ -4,9 +4,18 @@ public class CBabyDomain extends BaseDomain{
     private final Integer PAGE_SIZE = 10;
     private String text;
     private String img;
+    private String classId;
     private Integer offset;
     private Integer limit;
     private long createDate;
+
+    public String getClassId() {
+        return classId;
+    }
+
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
 
     public Integer getOffset() {
         return offset == null ? 1 : offset;

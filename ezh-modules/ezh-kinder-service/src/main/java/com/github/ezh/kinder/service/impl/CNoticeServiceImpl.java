@@ -35,6 +35,11 @@ public class CNoticeServiceImpl extends ServiceImpl<CNoticeMapper, CNotice> impl
     }
 
     @Override
+    public Integer checkIsRead(String id,String userId) {
+        return baseMapper.checkIsRead(id,userId);
+    }
+
+    @Override
     public void deleteFlag(String id) {
         baseMapper.deleteFlag(id);
         baseMapper.deleteFlagUser(id);

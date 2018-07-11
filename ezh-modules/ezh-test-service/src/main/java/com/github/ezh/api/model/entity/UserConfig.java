@@ -15,11 +15,28 @@ public class UserConfig extends Model<UserConfig> {
     private String userId;
     private String clientId;
     private String mobileType;
-    private Integer showNum;
+    private Integer taskNum;
     private Integer noticeNum;
+    private Integer classNum;
 
     public final static String MOBILE_TYPE_IOS = "0";
     public final static String MOBILE_TYPE_ANDRIOD = "1";
+
+    public Integer getTaskNum() {
+        return taskNum;
+    }
+
+    public void setTaskNum(Integer taskNum) {
+        this.taskNum = taskNum;
+    }
+
+    public Integer getClassNum() {
+        return classNum;
+    }
+
+    public void setClassNum(Integer classNum) {
+        this.classNum = classNum;
+    }
 
     public String getMobileType() {
         return mobileType;
@@ -51,14 +68,6 @@ public class UserConfig extends Model<UserConfig> {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
-    }
-
-    public Integer getShowNum() {
-        return showNum;
-    }
-
-    public void setShowNum(Integer showNum) {
-        this.showNum = showNum;
     }
 
     public Integer getNoticeNum() {

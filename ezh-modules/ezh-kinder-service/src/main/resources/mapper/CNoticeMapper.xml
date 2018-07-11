@@ -101,6 +101,20 @@
         ORDER BY isRead DESC, u.user_type, u.id
     </select>
 
+    <select id="checkIsRead" resultType="java.lang.Integer">
+        <![CDATA[
+        SELECT
+            CASE WHEN FIND_IN_SET(#{userId},group_concat(q.user_id)) > 0 THEN 1 ELSE 0 END AS "isRead"
+        FROM (
+            SELECT
+                cnu.user_id
+            FROM c_notice_user cnu
+            WHERE cnu.notice_id = #{id}
+            AND cnu.del_flag = 0
+        ) q
+        ]]>
+    </select>
+
     <insert id="readNotice">
         INSERT INTO c_notice_user (
           id,

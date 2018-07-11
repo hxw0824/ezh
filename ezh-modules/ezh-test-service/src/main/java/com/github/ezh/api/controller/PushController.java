@@ -119,7 +119,7 @@ public class PushController extends BaseController {
                 if (domain.getType().equalsIgnoreCase(NoticeMessageDto.MESSAGE_TYPE_NOTICE)) {
                     uConfig.setNoticeNum(totalSize);
                 } else {
-                    uConfig.setShowNum(totalSize);
+//                    uConfig.setShowNum(totalSize);
                 }
                 userConfigService.updateByUserId(uConfig);
             }
@@ -226,14 +226,14 @@ public class PushController extends BaseController {
         }
 
         if(userList != null && userList.size() > 0){
-            for(UserDto ud : userList){
-                if(ud.getUserConfig() != null) {
-                    if(StringUtils.isNotBlank(ud.getUserConfig().getClientId())){
-                        clientStr.append(ud.getUserConfig().getClientId());
-                        clientStr.append(",");
-                    }
-                }
-            }
+//            for(UserDto ud : userList){
+//                if(ud.getUserConfig() != null) {
+//                    if(StringUtils.isNotBlank(ud.getUserConfig().getClientId())){
+//                        clientStr.append(ud.getUserConfig().getClientId());
+//                        clientStr.append(",");
+//                    }
+//                }
+//            }
             if(clientStr.length() > 0) {
                 clientStr.deleteCharAt(clientStr.length() - 1);
                 IPushResult res = PushUtils.pushToList(clientStr.toString(), ezhConfig.getAppName() + type, user.getName() + "：" + domain.getText(), "icon.png", "", "");

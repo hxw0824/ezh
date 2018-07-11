@@ -11,9 +11,13 @@ import java.util.List;
 @Service
 public class TelsmsServiceImpl extends ServiceImpl<TelsmsMapper, Telsms> implements TelsmsService {
 
+    @Override
+    public Telsms getLastByPhone(String phone,String type) {
+        return baseMapper.getLastByPhone(phone,type);
+    }
 
     @Override
-    public List<Telsms> getByPhone(String phone) {
-        return baseMapper.getByPhone(phone);
+    public boolean delTelsms(String phone,String type) {
+        return baseMapper.delTelsms(phone,type) == 1;
     }
 }

@@ -6,5 +6,9 @@ import com.github.ezh.api.model.entity.Telsms;
 import java.util.List;
 
 public interface TelsmsService extends IService<Telsms> {
-    List<Telsms> getByPhone(String phone);
+
+    Telsms getLastByPhone(String phone,String type);
+
+    boolean delTelsms(String phone,String type);
+
 }

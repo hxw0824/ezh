@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.TreasuryMapper">
+
+    <sql id="metaItemTreeColumns">
+        mit.id,
+        mit.name,
+        mit.code
+	</sql>
+
+    <sql id="resourceColumns">
+        sr.id AS "id",
+        sr.title AS "title",
+        sr.tag AS "tag",
+        sr.res_code AS "resCode",
+        sr.res_type AS "resType",
+        sr.file_name AS "fileName",
+        sr.file_auffix AS "fileAuffix",
+        sr.file_url AS "fileUrl",
+        sr.icon_url AS "iconUrl",
+        sr.thumbnail_url AS "thumbnailUrl",
+        sr.click_num AS "clickNum",
+        sr.size AS "size",
+        sr.remark AS "remark",
+        IFNULL(sri.item3_name,sri.item2_name) AS "columnName"
+        <if test="userId != null and userId != ''">
+            ,CASE WHEN h.handle_id IS NULL THEN 0 ELSE 1 END AS "isCollect"
+        </if>
+	</sql>
+
+    <sql id="resourceJoins">
+        LEFT JOIN sys_resource sr ON sri.res_code = sr.res_code
+        <if test="userId != null and userId != ''">
+            LEFT JOIN (
+                SELECT
+                    cr.handle_id
+                FROM c_relation cr
+                WHERE cr.del_flag = 0
+                AND cr.type = 0
+                AND cr.user_id = #{userId}
+            ) h ON sr.id = h.handle_id
+        </if>
+    </sql>
+
+    <select id="getByCode" resultType="com.github.ezh.kinder.model.vo.TreasuryColumns">
+        SELECT
+            <include refid="metaItemTreeColumns"/>
+        FROM meta_item_tree mit
+        WHERE mit.del_flag = 0
+        AND mit.code = #{code}
+    </select>
+
+    <select id="getResourceById" resultType="com.github.ezh.kinder.model.vo.Resource">
+        SELECT
+            <include refid="resourceColumns"/>
+        FROM sys_resource_item sri
+            <include refid="resourceJoins"/>
+        WHERE sr.id = #{id}
+    </select>
+
+    <!-- 查询宝库一级栏目 -->
+    <select id="getColumnOne" resultType="com.github.ezh.kinder.model.vo.TreasuryColumns">
+        SELECT
+            <include refid="metaItemTreeColumns"/>
+        FROM meta_item_tree mit
+        WHERE mit.del_flag = 0
+        AND mit.grade = 2
+        ORDER BY mit.sort
+    </select>
+
+    <!-- 根据一级栏目ID查询宝库二级栏目 -->
+    <select id="getColumnTwo" resultType="com.github.ezh.kinder.model.vo.TreasuryColumns">
+        SELECT
+            <include refid="metaItemTreeColumns"/>
+        FROM meta_item_tree mit
+        WHERE mit.del_flag = 0
+        AND mit.parent_id = #{pid}
+        ORDER BY mit.sort
+    </select>
+
+    <!-- 热门搜索关键词 -->
+    <select id="getHotWord" resultType="java.lang.String">
+        SELECT
+            DISTINCT(mit.name)
+        FROM meta_item_tree mit
+        WHERE mit.grade = 3
+        OR FIND_IN_SET(mit.code,(
+            SELECT
+                GROUP_CONCAT(code ORDER BY sort)
+            FROM meta_item_tree
+            WHERE grade = 2
+            AND NOT FIND_IN_SET(code,(
+                SELECT
+                    GROUP_CONCAT(y.code)
+                FROM (
+                    SELECT
+                    x.code
+                    FROM (
+                        SELECT
+                            LEFT(a.code,4) AS "code"
+                        FROM meta_item_tree a
+                        WHERE a.grade = 3
+                        GROUP BY a.code
+                    ) x GROUP BY x.code
+                ) y
+            ))
+        ))
+        ORDER BY mit.code,mit.sort
+    </select>
+
+    <!-- 搜索栏目 -->
+    <select id="getSearchColumns" resultType="com.github.ezh.kinder.model.vo.TreasurySearch">
+        SELECT
+            m.name,
+            sri.item2_code AS "column1Code",
+            sri.item3_code AS "column2Code",
+            COUNT(sri.id) AS "num"
+        FROM sys_resource_item sri
+        LEFT JOIN (
+            SELECT
+                DISTINCT(mit.name),
+                mit.code
+            FROM meta_item_tree mit
+            WHERE mit.name LIKE CONCAT('%',#{search},'%')
+            AND (mit.grade = 3
+            OR FIND_IN_SET(mit.code,(
+                SELECT
+                    GROUP_CONCAT(code ORDER BY sort)
+                FROM meta_item_tree
+                WHERE grade = 2
+                AND NOT FIND_IN_SET(code,(
+                    SELECT
+                        GROUP_CONCAT(y.code)
+                    FROM (
+                        SELECT
+                            x.code
+                        FROM (
+                            SELECT
+                            LEFT(a.code,4) AS "code"
+                            FROM meta_item_tree a
+                            WHERE a.grade = 3
+                            GROUP BY a.code
+                        ) x GROUP BY x.code
+                    ) y
+                ))
+            )))
+            ORDER BY mit.code,mit.sort
+        )m ON (sri.item3_code = m.code or sri.item2_code = m.code)
+        WHERE m.code IS NOT NULL
+        <if test="isKind == false">
+            AND sri.period_id = #{periodId}
+        </if>
+        GROUP BY m.code
+    </select>
+
+    <!-- 搜索资源 -->
+    <select id="getSearchResource" resultType="com.github.ezh.kinder.model.vo.Resource">
+        SELECT
+            <include refid="resourceColumns"/>
+        FROM sys_resource_item sri
+            <include refid="resourceJoins"/>
+        WHERE sr.title LIKE CONCAT('%',#{search},'%')
+        <if test="isKind == false">
+            AND sri.period_id = #{periodId}
+        </if>
+        AND sr.res_type = 1
+        GROUP BY sri.res_code
+        ORDER BY sri.item2_code,sri.item3_code
+        <if test="limit != null and offset != null">
+            LIMIT #{offset},#{limit}
+        </if>
+    </select>
+
+    <!-- 根据栏目code获取资源列表 -->
+    <select id="getResourceList" resultType="com.github.ezh.kinder.model.vo.Resource">
+        SELECT
+            <include refid="resourceColumns"/>
+        FROM sys_resource_item sri
+            <include refid="resourceJoins"/>
+        WHERE sri.item2_code = #{item2Code}
+        <if test="item3Code != null and item3Code != ''">
+            AND sri.item3_code = #{item3Code}
+        </if>
+        AND sri.period_id = #{periodId}
+        AND sr.res_type = 1
+        ORDER BY sri.id
+        <if test="limit != null and offset != null">
+            LIMIT #{offset},#{limit}
+        </if>
+    </select>
+
+    <!-- 获取收藏列表 -->
+    <select id="getCollectionList" resultType="com.github.ezh.kinder.model.vo.Resource">
+        SELECT
+            sr.id AS "id",
+            sr.title AS "title",
+            sr.tag AS "tag",
+            sr.res_code AS "resCode",
+            sr.res_type AS "resType",
+            sr.file_name AS "fileName",
+            sr.file_auffix AS "fileAuffix",
+            sr.file_url AS "fileUrl",
+            sr.icon_url AS "iconUrl",
+            sr.thumbnail_url AS "thumbnailUrl",
+            sr.click_num AS "clickNum",
+            sr.size AS "size",
+            sr.remark AS "remark",
+            IFNULL(sri.item3_name,sri.item2_name) AS "columnName"
+        FROM c_relation a
+        LEFT JOIN sys_resource sr ON a.handle_id = sr.id
+        LEFT JOIN sys_resource_item sri ON sri.res_code = sr.res_code
+        WHERE a.del_flag = 0
+        AND a.user_id = #{userId}
+        AND a.object = 'RESOURCE'
+        ORDER BY a.create_date DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{offset},#{limit}
+        </if>
+    </select>
+
+    <update id="addClickNum">
+        UPDATE sys_resource SET
+            click_num = click_num + 1
+        WHERE id = #{id}
+    </update>
+</mapper>

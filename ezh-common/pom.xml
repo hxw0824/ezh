@@ -96,36 +96,16 @@
             <optional> true </optional>
         </dependency>
 
-        <!-- user setting -->
+        <!-- 极光推送 -->
         <dependency>
-            <groupId>com.gexin</groupId>
-            <artifactId>gexin-rp-fastjson</artifactId>
-            <version>1.0.0.1</version>
+            <groupId>cn.jpush.api</groupId>
+            <artifactId>jpush-client</artifactId>
+            <version>3.3.3</version>
         </dependency>
         <dependency>
-            <groupId>com.gexin</groupId>
-            <artifactId>gexin-rp-sdk-base</artifactId>
-            <version>4.0.0.22</version>
-        </dependency>
-        <dependency>
-            <groupId>com.gexin</groupId>
-            <artifactId>gexin-rp-sdk-http</artifactId>
-            <version>4.0.1.17</version>
-        </dependency>
-        <dependency>
-            <groupId>com.gexin</groupId>
-            <artifactId>gexin-rp-sdk-template</artifactId>
-            <version>4.0.0.16</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hx</groupId>
-            <artifactId>new</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>2.5.0</version>
+            <groupId>cn.jpush.api</groupId>
+            <artifactId>jiguang-common</artifactId>
+            <version>1.0.8</version>
         </dependency>
     </dependencies>
 

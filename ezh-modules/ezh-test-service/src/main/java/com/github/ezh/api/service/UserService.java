@@ -8,21 +8,19 @@ import java.util.List;
 
 public interface UserService extends IService<User> {
 
-    public Integer updatePwd(User user);
+    boolean updatePwdByMobile(User user);
 
-    public boolean updatePwdByMobile(User user);
+    boolean updateInfo(User user);
 
-    public boolean updateImageId(User user);
+    UserDto get(User user);
 
-    public UserDto get(User user);
+    UserDto getById(String id);
 
-    public UserDto getById(String id);
+    UserDto getByLoginNameOne(String loginName);
 
-    public UserDto getByLoginNameOne(String loginName);
+    UserDto getByMobile(String mobile);
 
-    public UserDto getByMobile(String mobile);
+    List<UserDto> getByLoginName(User user);
 
-    public List<UserDto> getByLoginName(User user);
-
-    public List<UserDto> getByAny(String userType, String officeId, String classId, String userId);
+    List<UserDto> getByAny(String userType, String officeId, String classId, String userId);
 }

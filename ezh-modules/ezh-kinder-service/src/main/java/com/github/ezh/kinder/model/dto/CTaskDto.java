@@ -23,6 +23,15 @@ public class CTaskDto implements Serializable {
     private String userName;
     private String className;
     private String isRead;
+    private String[] attachArr;
+
+    public String[] getAttachArr() {
+        return attachArr;
+    }
+
+    public void setAttachArr(String[] attachArr) {
+        this.attachArr = attachArr;
+    }
 
     public String getIsRead() {
         return isRead;

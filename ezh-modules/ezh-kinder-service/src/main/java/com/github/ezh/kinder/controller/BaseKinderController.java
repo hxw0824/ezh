@@ -12,7 +12,10 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class BaseKinderController extends BaseController {
@@ -29,6 +32,9 @@ public class BaseKinderController extends BaseController {
     @Autowired
     protected RedisTemplate redisTemplate;
 
+    @Autowired
+    protected DictService dictService;
+
     @Autowired(required = false)
     public void setRedisTemplate(RedisTemplate redisTemplate) {
         RedisSerializer stringSerializer = new StringRedisSerializer();
@@ -43,9 +49,16 @@ public class BaseKinderController extends BaseController {
     @Autowired
     protected QiniuPropertiesConfig qiniuPropertiesConfig;
 
-    public static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd" );
+    public static SimpleDateFormat SDF_YMD = new SimpleDateFormat("yyyy-MM-dd" );
+    public static SimpleDateFormat SDF_YMD_HMS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss" );
 
 
+    protected UserDto getUser(String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return null;
+        }
+        return userService.getById(userId);
+    }
 
     protected boolean checkUser(String userId) {
         if (StringUtils.isBlank(userId)) {
@@ -61,12 +74,32 @@ public class BaseKinderController extends BaseController {
         return userService.getByMobile(mobile) == null;
     }
 
-    protected boolean checkParentForValidByUserId(String userId) {
-        if (StringUtils.isBlank(userId)) {
+    protected boolean isKind(UserDto user) {
+        if (user == null || StringUtils.isBlank(user.getUserType())) {
             return false;
         }
-        UserDto user = userService.getById(userId);
-        return user != null && user.getUserType().equals(UserDto.USER_TYPE_PARENT);
+        return user.getUserType().equals(UserDto.USER_TYPE_KIND);
+    }
+
+    protected boolean isTeacher(UserDto user) {
+        if (user == null || StringUtils.isBlank(user.getUserType())) {
+            return false;
+        }
+        return user.getUserType().equals(UserDto.USER_TYPE_TEACHER);
+    }
+
+    protected boolean isParent(UserDto user) {
+        if (user == null || StringUtils.isBlank(user.getUserType())) {
+            return false;
+        }
+        return user.getUserType().equals(UserDto.USER_TYPE_PARENT);
+    }
+
+    protected boolean checkList(CopyOnWriteArrayList list) {
+        if (list == null || list.size() == 0) {
+            return false;
+        }
+        return true;
     }
 
 
@@ -90,6 +123,11 @@ public class BaseKinderController extends BaseController {
 
     protected void setRedis(String key, Object value, long timeout) {
         redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
+    }
+
+    protected void setSet(String... likeKeys) {
+        Map<String,Object> map = new HashMap<>();
+        redisTemplate.opsForSet().add("testSet",map);
     }
 
     protected void delLikeRedis(String... likeKeys) {

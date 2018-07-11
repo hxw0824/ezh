@@ -6,6 +6,8 @@ import com.github.ezh.kinder.model.entity.UserConfig;
 import com.github.ezh.kinder.service.UserConfigService;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
 @Service
 public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserConfig> implements UserConfigService {
 
@@ -23,6 +25,11 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
     @Override
     public UserConfig getByClientId(String clientId) {
         return baseMapper.getByClientId(clientId);
+    }
+
+    @Override
+    public CopyOnWriteArrayList<String> getPushUserList(String officeId, String classId) {
+        return baseMapper.getPushUserList(officeId,classId);
     }
 
     @Override

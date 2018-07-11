@@ -13,6 +13,8 @@ public interface CTaskService extends IService<CTask> {
 
     CTaskDto getById(String id);
 
+    CTaskUser getTaskUserById(String id);
+
     CopyOnWriteArrayList<CTaskDto> getTaskList(CTask cTask,Integer offset,Integer limit);
 
     CopyOnWriteArrayList<ReadStatusDto> getReadStatusList(CTask cTask);

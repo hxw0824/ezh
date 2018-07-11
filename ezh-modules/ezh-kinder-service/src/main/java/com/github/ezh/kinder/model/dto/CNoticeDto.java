@@ -11,6 +11,7 @@ public class CNoticeDto implements Serializable {
     private String id;
     private String title;
     private String content;
+    private String images;
     private Date createDate;
     private String userId;
     private String userName;
@@ -18,6 +19,23 @@ public class CNoticeDto implements Serializable {
     private String isRead;
 
     private String classId;
+    private String[] imagesArr;
+
+    public String[] getImagesArr() {
+        return imagesArr;
+    }
+
+    public void setImagesArr(String[] imagesArr) {
+        this.imagesArr = imagesArr;
+    }
+
+    public String getImages() {
+        return images;
+    }
+
+    public void setImages(String images) {
+        this.images = images;
+    }
 
     public String getClassId() {
         return classId;

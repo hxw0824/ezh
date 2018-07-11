@@ -13,9 +13,20 @@ import java.io.Serializable;
 public class CClassAttendanceDto implements Serializable{
     private String id;
     private String name;
-    private String leaveNum;
-    private String workNum;
-    private String notWorkNum;
+    private Integer leaveNum;
+    private Integer workNum;
+    private Integer notWorkNum;
+
+    public CClassAttendanceDto(String id, String name, Integer leaveNum, Integer workNum, Integer notWorkNum) {
+        this.id = id;
+        this.name = name;
+        this.leaveNum = leaveNum;
+        this.workNum = workNum;
+        this.notWorkNum = notWorkNum;
+    }
+
+    public CClassAttendanceDto() {
+    }
 
     public String getId() {
         return id;
@@ -33,27 +44,27 @@ public class CClassAttendanceDto implements Serializable{
         this.name = name;
     }
 
-    public String getLeaveNum() {
+    public Integer getLeaveNum() {
         return leaveNum;
     }
 
-    public void setLeaveNum(String leaveNum) {
+    public void setLeaveNum(Integer leaveNum) {
         this.leaveNum = leaveNum;
     }
 
-    public String getWorkNum() {
+    public Integer getWorkNum() {
         return workNum;
     }
 
-    public void setWorkNum(String workNum) {
+    public void setWorkNum(Integer workNum) {
         this.workNum = workNum;
     }
 
-    public String getNotWorkNum() {
+    public Integer getNotWorkNum() {
         return notWorkNum;
     }
 
-    public void setNotWorkNum(String notWorkNum) {
+    public void setNotWorkNum(Integer notWorkNum) {
         this.notWorkNum = notWorkNum;
     }
 }

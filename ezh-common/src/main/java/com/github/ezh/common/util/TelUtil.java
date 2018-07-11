@@ -8,12 +8,12 @@ public class TelUtil {
 	private static final String SN = "SDK-BBX-010-19809";
 	private static final String SMSPWD = "7EFB4E32E0F72348087BF9144FC8585D";
 
-	public static boolean sendSMS(String mobilePhone, String code,SMSUtil resultUtil) {
+	public static boolean sendSMS(String mobile, String type, String code,SMSUtil resultUtil) {
 		try {
 			String contentAuthCode = String.valueOf(code);
-			String content = "您正在找回密码，验证码为：" + contentAuthCode + "（60秒内有效） 请不要把验证码泄露给其他人。如非本人操作，请忽略。"+resultUtil.getMsg();
+			String content = "您正在"+ type +"，验证码为：" + contentAuthCode + "（30分钟内有效） 请不要把验证码泄露给其他人。如非本人操作，请忽略。"+resultUtil.getMsg();
 			String contentResult = java.net.URLEncoder.encode(content, "utf-8");
-			String param = "sn=" + SN + "&pwd=" + SMSPWD + "&mobile=" + mobilePhone
+			String param = "sn=" + SN + "&pwd=" + SMSPWD + "&mobile=" + mobile
 					+ "&content=" + contentResult + "&ext=1&stime=&rrid=&msgfmt=";
 			HttpRequestTool.sendGet(SMSURLSTR, param);
 			return true;

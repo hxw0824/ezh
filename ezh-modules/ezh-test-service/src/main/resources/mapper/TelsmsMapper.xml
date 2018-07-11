@@ -13,12 +13,20 @@
 
 	</sql>
 
-    <select id="getByPhone" resultType="com.github.ezh.api.model.entity.Telsms">
+    <select id="getLastByPhone" resultType="com.github.ezh.api.model.entity.Telsms">
         SELECT
         <include refid="telsmsColumns"/>
         FROM c_telsms a
         <include refid="telsmsJoins"/>
         WHERE a.phone = #{phone}
+        AND a.type = #{type}
         ORDER BY a.create_date DESC
+        LIMIT 1
     </select>
+
+    <delete id="delTelsms">
+        DELETE FROM c_telsms
+        WHERE phone = #{phone}
+        AND type = #{type}
+    </delete>
 </mapper>

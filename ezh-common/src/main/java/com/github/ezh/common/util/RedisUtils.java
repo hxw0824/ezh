@@ -24,9 +24,52 @@ public class RedisUtils {
     public static final String CLASS_TEMPERATURE_DATE = "class_temperature_date:";
 
     //通知
-    public static final String NOTICE_LIST_OFFICE_USERID = "notice_list:";
-    public static final String NOTICE_DETAIL_NOTICEID = "notice_detail:";
-    public static final String NOTICE_READSTATUS_LIST_OFFICE_NOTICEID = "notice_readstatus_list:";
+    public static final String NOTICELIST_OFFICE_CLASS_USER_LIMIT = "noticelist_office_class_user_limit:";
+    public static final String NOTICEDETAIL_NOTICE = "noticedetail_notice:";
+    public static final String NOTICEREADSTATUSLIST_OFFICE_NOTICE = "noticereadstatuslist_office_notice:";
+
+    //亲子任务
+    public static final String TASKLIST_OFFICE_CLASS_USER_LIMIT = "tasklist_office_class_user_limit:";
+    public static final String TASKDETAIL_TSAK = "taskdetail_task:";
+    public static final String TASKUSERDETAIL_TSAK = "taskuserdetail_task:";
+    public static final String TASKREADSTATUSLIST_OFFICE_CLASS_USER_TASK = "taskreadstatuslist_office_class_user_task:";
+
+    //请假
+    public static final String LEAVELIST_OFFICE_CLASS_USER_LIMIT = "leavelist_office_class_user_limit:";
+    public static final String LEAVEDETAIL_LEAVE = "leavedetail_leave:";
+
+    //班级圈
+    public static final String CLASSCIRCLELIST_OFFICE_CLASS_LIMIT = "classcirclelist_office_class_limit:";
+
+    //特别关注
+    public static final String SPECIALATTENTION_OFFICE_CLASS_USER = "specialattention_office_class_user:";
+
+
+
+    /******************************            后台相关操作时需要删除的REDIS           **************************/
+    //字典
+    public static final String SYSTEM_DICT_USERFAMILY = "system_dict:userfamily";
+    public static final String SYSTEM_DICT_APPBANNER = "system_dict:appbanner";
+    public static final String SYSTEM_DICT_PERIOD = "system_dict:period";
+    public static final String SYSTEM_DICT_DEFAULTPERIOD = "system_dict:defaultperiod";
+
+    //栏目
+    public static final String SYSTEM_ITEM_ALL_COLUMN1 = "system_item:all_column1";
+    public static final String SYSTEM_ITEM_ALL_COLUMN2 = "system_item:all_column2";
+    public static final String SYSTEM_ITEM_ALL_HOT_WORD = "system_item:all_hot_word";
+    public static final String SYSTEM_ITEM_CODE = "system_item:code:";
+    public static final String SYSTEM_ITEM_ID = "system_item:id:";
+
+    //资源
+    public static final String SYSTEM_RESOURCE_COLUMN1_COLUMN2_PERIOD_USER_LIMIT = "system_resource_column1_column2_period_user_limit:";
+
+    //资源 or 栏目
+    public static final String SYSTEM_ITEM_RESOURCE_SEARCH_PERIOD_ISKIND = "system_item_resource_search_period_iskind:";
+
+    //班级管理： 用户
+    public static final String SYSTEM_USER_CLASSMANAGE_OFFICE_CLASS_USER = "system_user_classmanage_office_class_user:";
+
+
 
     public static final long TWO_HOUR = 7200l;
     public static final long FOUR_HOUR = 14400l;

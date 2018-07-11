@@ -10,5 +10,7 @@ public interface CBabyService extends IService<CBaby> {
 
     List<CBabyDto> getList(String userType, String officeId, String classId, Integer offset, Integer limit);
 
+    CBabyDto getById(String id);
+
     boolean deleteFlag(String id);
 }

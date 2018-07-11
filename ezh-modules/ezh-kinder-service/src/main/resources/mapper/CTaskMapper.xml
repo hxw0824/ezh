@@ -32,6 +32,15 @@
         AND a.id = #{id}
     </select>
 
+    <select id="getTaskUserById" resultType="com.github.ezh.kinder.model.entity.CTaskUser">
+        SELECT
+            a.id,
+            a.task_id
+        FROM c_task_user a
+        WHERE a.del_flag = 0
+        AND a.id = #{id}
+    </select>
+
     <select id="getTaskList" resultType="com.github.ezh.kinder.model.dto.CTaskDto">
         SELECT
             <include refid="cTaskColumns"/>,
@@ -64,7 +73,7 @@
         SELECT
             u.name,
             u.image_id,
-        CASE WHEN x.user_id IS NULL THEN 0 ELSE 1 END AS "isRead"
+            CASE WHEN x.user_id IS NULL THEN 0 ELSE 1 END AS "isRead"
         FROM sys_user u
         LEFT JOIN c_task z ON 1 = 1
         LEFT JOIN (
@@ -88,21 +97,39 @@
 
     <select id="getTaskDetail" resultType="com.github.ezh.kinder.model.dto.CTaskDetailDto">
         SELECT
-            a.id AS "id",
-            a.content AS "content",
-            a.images AS "images",
-            a.star AS "star",
-            a.comment AS "comment",
-            a.create_date AS "createDate",
-            u.name AS "userName",
-            u.image_id AS "userImages",
-            c.name AS "className",
-            CASE WHEN star IS NULL THEN 0 ELSE 1 END AS "isStar"
-        FROM c_task_user a
-        LEFT JOIN sys_user u ON a.user_id = u.id
-        LEFT JOIN c_class c ON u.class_id = c.id
-        WHERE a.task_id = #{id}
-        ORDER BY a.create_date DESC
+            x.id,
+            x.content,
+            x.images,
+            x.star,
+            x.comment,
+            x.createDate,
+            x.userName,
+            x.userImages,
+            x.className,
+            x.isStar,
+            GROUP_CONCAT(z.name ORDER BY FIND_IN_SET(z.id,x.goodUserStr)) AS "likeUserNames"
+        FROM (
+            SELECT
+                a.id AS "id",
+                a.content AS "content",
+                a.images AS "images",
+                a.star AS "star",
+                a.comment AS "comment",
+                a.create_date AS "createDate",
+                u.name AS "userName",
+                u.image_id AS "userImages",
+                c.name AS "className",
+                CASE WHEN star IS NULL THEN 0 ELSE 1 END AS "isStar",
+                GROUP_CONCAT(cr.user_id ORDER BY cr.create_date) AS "goodUserStr"
+            FROM c_task_user a
+            LEFT JOIN sys_user u ON a.user_id = u.id
+            LEFT JOIN c_class c ON u.class_id = c.id
+            LEFT JOIN c_relation cr ON (cr.handle_id = a.id AND cr.type = 1 AND cr.del_flag = 0)
+            WHERE a.task_id = #{id}
+            GROUP BY a.id
+            ORDER BY a.create_date DESC
+        ) x left join sys_user z ON FIND_IN_SET(z.id,x.goodUserStr)
+        GROUP BY x.id
     </select>
 
     <insert id="readTask">

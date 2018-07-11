@@ -2,8 +2,6 @@ package com.github.ezh.kinder.service.impl;
 
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.github.ezh.kinder.mapper.CLeaveMapper;
-import com.github.ezh.kinder.model.dto.AttendanceBabyDto;
-import com.github.ezh.kinder.model.dto.AttendanceSelfDto;
 import com.github.ezh.kinder.model.dto.CLeaveDto;
 import com.github.ezh.kinder.model.entity.CLeave;
 import com.github.ezh.kinder.service.CLeaveService;
@@ -40,17 +38,8 @@ public class CLeaveServiceImpl extends ServiceImpl<CLeaveMapper, CLeave> impleme
     }
 
     @Override
-    public CopyOnWriteArrayList<AttendanceSelfDto> getSelfAttendanceByMonth(String userId, String year, String month) {
-        return baseMapper.getSelfAttendanceByMonth(userId,year,month);
+    public Integer checkIsRead(String id,String userId) {
+        return baseMapper.checkIsRead(id,userId);
     }
 
-    @Override
-    public CopyOnWriteArrayList<AttendanceBabyDto> getBabyAttendanceByDate(String officeId, String classId, String selDate) {
-        return baseMapper.getBabyAttendanceByDate(officeId,classId,selDate);
-    }
-
-    @Override
-    public String getAllBabyAttendanceByDate(String officeId, String classId, String selDate) {
-        return baseMapper.getAllBabyAttendanceByDate(officeId,classId,selDate);
-    }
 }

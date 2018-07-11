@@ -18,5 +18,7 @@ public interface CNoticeService extends IService<CNotice> {
 
     boolean readNotice(CNoticeUser cNoticeUser);
 
+    Integer checkIsRead(String id,String userId);
+
     void deleteFlag(String id);
 }

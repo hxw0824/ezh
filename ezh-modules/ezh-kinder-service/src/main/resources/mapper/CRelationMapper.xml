@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.CRelationMapper">
+
+    <sql id="cRelationColumns">
+		a.id AS "id",
+		a.handle_id AS "handleId",
+		a.user_id AS "userId",
+		a.type AS "type",
+		a.create_date AS "createDate"
+	</sql>
+
+    <sql id="cRelationJoins">
+	</sql>
+
+    <select id="checkNow" resultType="com.github.ezh.kinder.model.entity.CRelation">
+        SELECT
+            <include refid="cRelationColumns"/>
+        FROM c_relation a
+        <include refid="cRelationJoins"/>
+        WHERE a.del_flag = 0
+        AND a.handle_id = #{handleId}
+        AND a.user_id = #{userId}
+        AND a.`type` = #{type}
+    </select>
+
+    <select id="checkDel" resultType="com.github.ezh.kinder.model.entity.CRelation">
+        SELECT
+        <include refid="cRelationColumns"/>
+        FROM c_relation a
+        <include refid="cRelationJoins"/>
+        WHERE a.del_flag = 1
+        AND a.handle_id = #{handleId}
+        AND a.user_id = #{userId}
+        AND a.`type` = #{type}
+    </select>
+
+    <update id="recoveryFlag">
+        UPDATE c_relation SET
+            del_flag = 0,
+            create_date = #{createDate}
+        WHERE handle_id = #{handleId}
+        AND user_id = #{userId}
+        AND `type` = #{type}
+    </update>
+
+    <update id="deleteFlag">
+        UPDATE c_relation SET
+            del_flag = 1
+        WHERE handle_id = #{handleId}
+        AND user_id = #{userId}
+        AND `type` = #{type}
+    </update>
+</mapper>

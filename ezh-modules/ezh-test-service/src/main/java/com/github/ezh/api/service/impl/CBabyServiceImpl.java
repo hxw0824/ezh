@@ -18,6 +18,11 @@ public class CBabyServiceImpl extends ServiceImpl<CBabyMapper, CBaby> implements
     }
 
     @Override
+    public CBabyDto getById(String id) {
+        return baseMapper.getById(id);
+    }
+
+    @Override
     public boolean deleteFlag(String id) {
         return baseMapper.deleteFlag(id) == 1;
     }

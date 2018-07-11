@@ -18,6 +18,15 @@ public class CTaskDetailDto implements Serializable {
     private String comment;
     private Date createDate;
     private String isStar;
+    private String likeUserNames;
+
+    public String getLikeUserNames() {
+        return likeUserNames;
+    }
+
+    public void setLikeUserNames(String likeUserNames) {
+        this.likeUserNames = likeUserNames;
+    }
 
     public String getUserImages() {
         return userImages;

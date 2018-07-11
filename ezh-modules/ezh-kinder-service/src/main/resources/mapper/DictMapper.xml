@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ezh.kinder.mapper.DictMapper">
+
+    <select id="getDictList" resultType="com.github.ezh.kinder.model.dto.DictDto">
+        SELECT
+            a.value,
+            a.label
+        FROM sys_dict a
+        WHERE a.del_flag = 0
+        AND a.type = #{type}
+        ORDER BY a.sort
+    </select>
+
+    <select id="getDictValue" resultType="java.lang.String">
+        SELECT
+            a.value
+        FROM sys_dict a
+        WHERE a.del_flag = 0
+        AND a.type = #{type}
+        AND a.label = #{label}
+    </select>
+
+    <select id="getDictLabel" resultType="java.lang.String">
+        SELECT
+            a.label
+        FROM sys_dict a
+        WHERE a.del_flag = 0
+        AND a.type = #{type}
+        AND a.value = #{value}
+    </select>
+</mapper>

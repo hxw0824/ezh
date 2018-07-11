@@ -34,6 +34,21 @@
         AND a.id = #{id}
     </select>
 
+    <select id="checkIsRead" resultType="java.lang.Integer">
+        <![CDATA[
+        SELECT
+			CASE WHEN FIND_IN_SET(#{userId},q.read_user) > 0 THEN 1 ELSE 0 END AS "isRead"
+	    FROM (
+            SELECT
+                    a.read_user
+            FROM c_leave a
+            WHERE a.id = #{id}
+            AND a.del_flag = 0
+            AND a.status = 1
+        ) q
+        ]]>
+    </select>
+
     <select id="getLeaveList" resultType="com.github.ezh.kinder.model.dto.CLeaveDto">
         SELECT
             <include refid="cLeaveColumns"/>,
@@ -87,186 +102,4 @@
         del_flag = 1
         WHERE id = #{id}
     </update>
-
-
-
-
-    <!-- 根据年月获取我的到园记录 -->
-    <select id="getSelfAttendanceByMonth" resultType="com.github.ezh.kinder.model.dto.AttendanceSelfDto">
-        <![CDATA[
-        SELECT
-            l.date AS "date",
-            l.status AS "status"
-        FROM(
-            SELECT
-                h.date,
-                CASE WHEN FIND_IN_SET(h.date, h.workStr) IS NOT NULL AND FIND_IN_SET(h.date, h.workStr) <> 0 THEN 2 ELSE (
-                    CASE WHEN FIND_IN_SET(h.date, h.leaveStr) IS NOT NULL AND FIND_IN_SET(h.date, h.leaveStr) <> 0 THEN 1 ELSE 0 END
-                ) END AS "status"
-            FROM(
-                SELECT
-                    CONCAT(#{year}, '-', #{month}, '-', aa.value) AS "date",
-                    (
-                        SELECT
-                            GROUP_CONCAT(n.leaveDate) AS "leaveStr"
-                        FROM (
-                            SELECT
-                                DATE_FORMAT(m.leaveDate, '%Y-%m-%d') AS "leaveDate"
-                            FROM (
-                                SELECT
-                                    SUBSTRING_INDEX(SUBSTRING_INDEX(a.dates,',',b.help_topic_id + 1),',' ,- 1) AS "leaveDate"
-                                FROM c_leave a
-                                JOIN mysql.help_topic b ON b.help_topic_id < (length(a.dates) - length(REPLACE(a.dates, ',', '')) + 1)
-                                WHERE a.user_id = #{userId}
-                                AND a.status = 1
-                            ) m
-                            WHERE DATE_FORMAT(m.leaveDate, '%Y%m') = DATE_FORMAT(CONCAT(#{year}, '-', #{month}, '-01'),'%Y%m')
-                            GROUP BY DATE_FORMAT(m.leaveDate, '%Y-%m-%d')
-                            ORDER BY m.leaveDate
-                        ) n
-                    ) AS "leaveStr",
-                    (
-                        SELECT
-                            GROUP_CONCAT(b.workDate) AS "workStr"
-                        FROM (
-                            SELECT
-                                DATE_FORMAT(a.sign_time, '%Y-%m-%d') AS "workDate"
-                            FROM c_work a
-                            WHERE DATE_FORMAT(a.sign_time, '%Y%m') = DATE_FORMAT(CONCAT(#{year}, '-', #{month}, '-01'),'%Y%m')
-                            AND a.user_id = #{userId}
-                            GROUP BY DATE_FORMAT(a.sign_time, '%Y-%m-%d')
-                            ORDER BY a.sign_time
-                        ) b
-                    ) AS "workStr"
-                FROM user_help aa
-                WHERE aa.type = 'day_of_month'
-                AND CAST(aa.value AS SIGNED) <= DAYOFMONTH(LAST_DAY(CONCAT(#{year}, '-', #{month}, '-01')))
-            ) h
-        ) l
-        WHERE l.status <> 0
-        ]]>
-    </select>
-
-    <!-- 根据日期获取宝宝到园记录 -->
-    <select id="getBabyAttendanceByDate" resultType="com.github.ezh.kinder.model.dto.AttendanceBabyDto">
-        <![CDATA[
-        SELECT
-            y.id AS "id",
-            y.name AS "name",
-            y.image_id AS "photo",
-            y.status AS "status"
-        FROM (
-            SELECT
-                h.id,
-                h.name,
-                h.image_id,
-                CASE WHEN FIND_IN_SET(h.id, h.workUserStr) IS NOT NULL AND FIND_IN_SET(h.id, h.workUserStr) <> 0 THEN 2 ELSE (
-                    CASE WHEN FIND_IN_SET(h.id, h.leaveUserStr) IS NOT NULL AND FIND_IN_SET(h.id, h.leaveUserStr) <> 0 THEN 1 ELSE 0 END
-                ) END AS "status"
-            FROM(
-                SELECT
-                    su.id,
-                    su.name,
-                    su.image_id,
-                    (
-                        SELECT
-                            GROUP_CONCAT(n.user_id)
-                        FROM (
-                            SELECT
-                                cw.user_id
-                            FROM c_work cw
-                            WHERE DATE_FORMAT(cw.sign_time, '%Y-%m-%d') = DATE_FORMAT(#{selDate}, '%Y-%m-%d')
-                            AND cw.office_id = #{officeId}
-                            AND cw.class_id = #{classId}
-                            GROUP BY cw.user_id
-                        ) n
-                    ) AS "workUserStr",
-                    (
-                        SELECT
-                            GROUP_CONCAT(m.user_id)
-                        FROM (
-                            SELECT
-                                cl.user_id
-                            FROM c_leave cl
-                            WHERE FIND_IN_SET(#{selDate}, cl.dates)
-                            AND cl.office_id = #{officeId}
-                            AND cl.class_id = #{classId}
-                            AND cl.status = 1
-                            GROUP BY cl.user_id
-                        ) m
-                    ) AS "leaveUserStr"
-                FROM sys_user su
-                WHERE su.office_id = #{officeId}
-                AND su.class_id = #{classId}
-                AND su.user_type = 5
-            ) h
-        ) y ORDER BY y.status DESC
-        ]]>
-    </select>
-
-    <select id="getAllBabyAttendanceByDate" resultType="java.lang.String">
-        <![CDATA[
-select
-group_concat(z.num) AS "str"
-from (
-        SELECT
-        mh.`value` AS "status",
-        IFNULL(ud.num,0) AS "num"
-        from user_help mh
-        LEFT JOIN(
-        SELECT
-        y.status,
-        count(y.id) AS "num"
-        FROM (
-        SELECT
-        h.id,
-        h.name,
-        h.image_id,
-        CASE WHEN FIND_IN_SET(h.id, h.workUserStr) IS NOT NULL AND FIND_IN_SET(h.id, h.workUserStr) <> 0 THEN 2 ELSE (
-        CASE WHEN FIND_IN_SET(h.id, h.leaveUserStr) IS NOT NULL AND FIND_IN_SET(h.id, h.leaveUserStr) <> 0 THEN 1 ELSE 0 END
-        ) END AS "status"
-        FROM
-        (
-        SELECT
-        su.id,
-        su.name,
-        su.image_id,
-        (
-        SELECT
-        GROUP_CONCAT(n.user_id)
-        FROM
-        (
-        SELECT
-        cw.user_id
-        FROM c_work cw
-        WHERE DATE_FORMAT(cw.sign_time, '%Y-%m-%d') = DATE_FORMAT(#{selDate}, '%Y-%m-%d')
-        AND cw.office_id = #{officeId}
-        AND cw.class_id = #{classId}
-        GROUP BY cw.user_id
-        ) n
-        ) AS "workUserStr",
-        (
-        SELECT
-        GROUP_CONCAT(m.user_id)
-        FROM
-        (
-        SELECT
-        cl.user_id
-        FROM c_leave cl
-        WHERE FIND_IN_SET(#{selDate}, cl.dates)
-        AND cl.office_id = #{officeId}
-        AND cl.class_id = #{classId}
-        AND cl.status = 1
-        GROUP BY cl.user_id
-        ) m
-        ) AS "leaveUserStr"
-        FROM sys_user su
-        WHERE su.office_id = #{officeId}
-        AND su.class_id = #{classId}
-        AND su.user_type = 5
-        ) h
-        )y GROUP BY y.status ) ud  ON ud.status = mh.`value`
-        WHERE mh.type = 'attendance_status' ) z
-        ]]>
-    </select>
 </mapper>

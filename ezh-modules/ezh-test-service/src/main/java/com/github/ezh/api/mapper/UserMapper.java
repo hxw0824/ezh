@@ -17,11 +17,9 @@ import java.util.List;
  */
 public interface UserMapper extends BaseMapper<User> {
 
-    Integer updatePwd(User user);
-
     Integer updatePwdByMobile(User user);
 
-    Integer updateImageId(User user);
+    Integer updateInfo(User user);
 
     UserDto get(User user);
 

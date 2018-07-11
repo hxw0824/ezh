@@ -12,5 +12,7 @@ public interface CBabyMapper extends BaseMapper<CBaby> {
     List<CBabyDto> getList(@Param("userType" ) String userType, @Param("officeId" ) String officeId, @Param("classId" ) String classId,
                            @Param("offset" ) Integer offset, @Param("limit" ) Integer limit);
 
+    CBabyDto getById(@Param("id")String id);
+
     Integer deleteFlag(@Param("id")String id);
 }

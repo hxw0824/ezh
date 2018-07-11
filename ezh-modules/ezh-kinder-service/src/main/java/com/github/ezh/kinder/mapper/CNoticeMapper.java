@@ -22,5 +22,7 @@ public interface CNoticeMapper extends BaseMapper<CNotice> {
 
     Integer deleteFlag(@Param("id")String id);
 
+    Integer checkIsRead(@Param("id")String id,@Param("userId")String userId);
+
     Integer deleteFlagUser(@Param("id")String id);
 }

@@ -14,6 +14,8 @@ public interface CTaskMapper extends BaseMapper<CTask> {
 
     CTaskDto getById(@Param("id") String id);
 
+    CTaskUser getTaskUserById(@Param("id") String id);
+
     CopyOnWriteArrayList<CTaskDto> getTaskList(@Param("obj")CTask cTask, @Param("offset")Integer offset, @Param("limit")Integer limit);
 
     CopyOnWriteArrayList<ReadStatusDto> getReadStatusList(CTask cTask);

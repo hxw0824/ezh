@@ -22,6 +22,17 @@ public class EzhConfig {
     @Value("${beginDate}")
     private String beginDate;
 
+    @Value("${birthRemindDay}")
+    private Integer birthRemindDay;
+
+    public Integer getBirthRemindDay() {
+        return birthRemindDay;
+    }
+
+    public void setBirthRemindDay(Integer birthRemindDay) {
+        this.birthRemindDay = birthRemindDay;
+    }
+
     public String getBeginDate() {
         return beginDate;
     }

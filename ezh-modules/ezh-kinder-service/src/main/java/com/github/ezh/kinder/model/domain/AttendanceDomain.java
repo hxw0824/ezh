@@ -6,6 +6,35 @@ public class AttendanceDomain extends BaseDomain{
     private String month;
 
     private String selDate;
+    private String classId;
+
+
+    private String handleUserIds;
+    private String status;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getHandleUserIds() {
+        return handleUserIds;
+    }
+
+    public void setHandleUserIds(String handleUserId) {
+        this.handleUserIds = handleUserId;
+    }
+
+    public String getClassId() {
+        return classId;
+    }
+
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
 
     public String getSelDate() {
         return selDate;

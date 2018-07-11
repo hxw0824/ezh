@@ -15,6 +15,12 @@ public enum ReturnCode {
     TOKEN_NOT_VALID(2001, "用户token不合法" ),
     FILE_IS_NULL(2002, "请选择上传的图片或资源" ),
     ID_NOT_VALID(2004, "用户ID不合法" ),
+    SEX_NOT_VALID(2005, "性别不合法" ),
+    RELATION_OBJECT_NOT_VALID(2006, "点赞收藏对象不合法" ),
+    COLUMN_NOT_FOUND(2007, "未找到相关栏目" ),
+    CBABY_NOT_FOUND(2008, "未找到相关班级圈详情" ),
+    TASKUSER_NOT_FOUND(2009, "未找到相关亲子任务反馈" ),
+    TREASURY_RESOURCE_NOT_FOUND(2010, "未找到相关宝库资源" ),
 
     //3开头 打卡机相关
     MAC_UNBIND(3000, "打卡机未绑定" ),
@@ -33,10 +39,13 @@ public enum ReturnCode {
     BOOK_NOT_FOUND(8005, "未找到相关图书" ),
 
     // 以9开头的为业务方面的异常
+    MOBILE_IS_EXISTS(9000, "手机号码已存在" ),
     PHONE_NOT_VALID(9001, "手机号码不合法" ),
     SEND_VERIFYCODE_NOT_VALID(9002, "60秒内禁止重复发送验证码" ),
     SEND_VERIFYCODE_ERROR(9003, "发送验证码失败" ),
     VERIFYCODE_NOT_CORRECT(9004, "验证码不正确" ),
+    VERIFYCODE_TYPE_ERROR(9017, "验证码类型不正确" ),
+    VERIFYCODE_VALID_ERROR(9018, "校检验证码失败" ),
     VERIFYCODE_IS_NOT_INVALID(9015, "验证码已失效" ),
     SIMPLE_PASSWORD(9005, "密码过于简单" ),
     USERNAME_PASSWORD_NOT_CORRECT(9006, "用户名或密码不正确" ),

@@ -13,18 +13,13 @@ import java.util.List;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Override
-    public Integer updatePwd(User user) {
-        return baseMapper.updatePwd(user);
-    }
-
-    @Override
     public boolean updatePwdByMobile(User user) {
         return baseMapper.updatePwdByMobile(user) == 1;
     }
 
     @Override
-    public boolean updateImageId(User user) {
-        return baseMapper.updateImageId(user) == 1;
+    public boolean updateInfo(User user) {
+        return baseMapper.updateInfo(user) == 1;
     }
 
     @Override

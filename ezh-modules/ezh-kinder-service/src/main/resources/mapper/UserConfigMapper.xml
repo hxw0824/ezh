@@ -8,8 +8,9 @@
             a.user_id AS "userId",
             a.client_id AS "clientId",
             a.mobile_type AS "mobileType",
-            a.show_num AS "showNum",
-            a.notice_num AS "noticeNum"
+            a.task_num AS "taskNum",
+            a.notice_num AS "noticeNum",
+            a.class_num AS "classNum"
         FROM user_config a
         WHERE a.user_id = #{userId}
     </select>
@@ -20,30 +21,55 @@
             a.user_id AS "userId",
             a.client_id AS "clientId",
             a.mobile_type AS "mobileType",
-            a.show_num AS "showNum",
-            a.notice_num AS "noticeNum"
+            a.task_num AS "taskNum",
+            a.notice_num AS "noticeNum",
+            a.class_num AS "classNum"
         FROM user_config a
         WHERE a.client_id = #{clientId}
     </select>
 
-    <update id="updateByUserId">
-        UPDATE user_config SET
+    <select id="getPushUserList" resultType="java.lang.String">
+        SELECT
+            a.client_id
+        FROM user_config a
+        LEFT JOIN sys_user su ON su.id = a.user_id
+        WHERE su.office_id = #{officeId}
+        <if test="classId != null and classId != ''">
             <choose>
-                <when test="clientId != null and clientId != ''">
-                    client_id = #{clientId},
+                <when test="classId == 'ALL'">
+                    <![CDATA[
+                        AND su.user_type > 3
+                    ]]>
+                </when>
+                <when test="classId == 'TEACHER'">
+                    AND su.user_type = 4
+                </when>
+                <when test="classId == 'STUDENT'">
+                    AND su.user_type = 5
                 </when>
                 <otherwise>
-                    client_id = '',
+                    AND FIND_IN_SET(su.class_id,#{classId})
                 </otherwise>
             </choose>
+        </if>
+    </select>
+
+    <update id="updateByUserId">
+        UPDATE user_config SET
+            <if test="clientId != null and clientId != ''">
+                client_id = #{clientId},
+            </if>
             <if test="mobileType != null and mobileType != ''">
                 mobile_type = #{mobileType},
             </if>
-            <if test="showNum != null and showNum != ''">
-                show_num = #{showNum},
+            <if test="taskNum != null and taskNum != ''">
+                task_num = #{taskNum},
             </if>
             <if test="noticeNum != null and noticeNum != ''">
                 notice_num = #{noticeNum},
+            </if>
+            <if test="classNum != null and classNum != ''">
+                class_num = #{classNum},
             </if>
             user_id = #{userId}
         WHERE user_id = #{userId}

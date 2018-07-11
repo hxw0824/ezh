@@ -8,5 +8,7 @@ import java.util.List;
 
 public interface TelsmsMapper extends BaseMapper<Telsms> {
 
-    List<Telsms> getByPhone(@Param("phone") String phone);
+    Telsms getLastByPhone(@Param("phone") String phone,@Param("type") String type);
+
+    Integer delTelsms(@Param("phone") String phone,@Param("type") String type);
 }

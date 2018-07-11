@@ -16,13 +16,14 @@ public class Telsms extends Model<Telsms> {
 
 	@TableId(value = "id", type = IdType.UUID)
 	private String id;		// id
-	private String type; //0：注册 1：找回密码
+	private String type; //0：注册 1：找回密码 2:修改密码
 	private String phone;		// phone
 	private String code;		// code
 	private Date createDate;		// code
 
 	public static final String TYPE_REGISTER = "0";
 	public static final String TYPE_FORGET_PASSWORD = "1";
+	public static final String TYPE_UPDATE_PASSWORD = "2";
 
 	public String getId() {
 		return id;

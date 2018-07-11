@@ -13,31 +13,19 @@ public class User extends Model<User> {
 
     @TableId(value = "id", type = IdType.UUID)
     private String id;
-    @TableField("office_id" )
     private String officeId;        // 学校id
-    @TableField("class_id" )
     private String classId;        // 班级id
-    @TableField("period_id" )
     private String periodId;
-    @TableField("user_token" )
     private String userToken;        // user_token
-    @TableField("login_name" )
     private String loginName;
-    @TableField("password" )
     private String password;
-    @TableField("name" )
     private String name;
-    @TableField("email" )
     private String email;
-    @TableField("mobile" )
     private String mobile;
-    @TableField("user_type" )
     private String userType;
-    @TableField("image_id" )
     private String imageId;
-    @TableField("photo" )
     private String photo;
-    @TableField("remarks" )
+    private String firstLogin;
     private String remarks;
 
     public User() {
@@ -45,6 +33,14 @@ public class User extends Model<User> {
 
     public User(String id) {
         this.id = id;
+    }
+
+    public String getFirstLogin() {
+        return firstLogin;
+    }
+
+    public void setFirstLogin(String firstLogin) {
+        this.firstLogin = firstLogin;
     }
 
     public String getId() {

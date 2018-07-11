@@ -32,7 +32,7 @@ spring:
     testOnBorrow: false
     testOnReturn: false
     # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
-    filters: stat,wall,log4j
+    filters: stat,log4j
     logSlowSql: true
 
   jackson:

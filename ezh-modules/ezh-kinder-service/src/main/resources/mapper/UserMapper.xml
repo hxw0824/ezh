@@ -5,33 +5,27 @@
     <sql id="userColumns">
 		a.id,
     	a.office_id AS "officeId",
-    	a.office_id AS "office.id",
     	a.class_id AS "classId",
     	a.period_id AS "periodId",
-    	a.user_token AS "userToken",
     	a.login_name AS "loginName",
     	a.password,
 		a.name,
-		a.email,
+		a.sex,
+		a.birth,
+		a.phone,
 		a.mobile,
 		a.user_type AS "userType",
 		a.image_id AS "imageId",
-		a.photo,
-		a.remarks,
-		o.name AS "office.name",
-		o.type AS "office.type",
-		cs.id AS "cclass.id",
-		cs.name AS "cclass.name",
-		uc.user_id AS "userConfig.userId",
-		uc.client_id AS "userConfig.clientId",
-		uc.show_num AS "userConfig.showNum",
-		uc.notice_num AS "userConfig.noticeNum"
+		a.first_login AS "firstLogin",
+		o.name AS "officeName",
+		cc.name AS "className",
+		ROUND(DATEDIFF(CURDATE(), a.birth)/365.2422) AS "age"
 	</sql>
 
     <sql id="userJoins">
-		LEFT JOIN sys_office o ON o.id = a.office_id
-		LEFT JOIN c_class cs ON cs.id = a.class_id
-		LEFT JOIN user_config uc ON uc.user_id = a.id
+ 		LEFT JOIN sys_office o ON o.id = a.office_id
+ 		LEFT JOIN c_class cc ON cc.id = a.class_id
+-- 		LEFT JOIN user_config uc ON uc.user_id = a.id
 	</sql>
 
     <!-- 查询用户 -->
@@ -51,12 +45,13 @@
         WHERE a.id = #{id}
     </select>
 
-    <select id="getByLoginNameOne" resultType="com.github.ezh.kinder.model.dto.UserDto">
+    <select id="login" resultType="com.github.ezh.kinder.model.dto.UserDto">
         SELECT
-        <include refid="userColumns"/>
+            <include refid="userColumns"/>
         FROM sys_user a
-        <include refid="userJoins"/>
+            <include refid="userJoins"/>
         WHERE a.login_name = #{loginName}
+        OR a.mobile = #{loginName}
     </select>
 
     <!-- 根据登录名查询用户 -->
@@ -99,11 +94,36 @@
                 ]]>
             </if>
         </where>
+        ORDER BY a.create_date
     </select>
 
-    <update id="updatePwd">
+    <update id="updateInfo">
         UPDATE sys_user SET
-            password = #{password}
+            <if test="classId != null and classId != ''">
+                class_id = #{classId},
+            </if>
+            <if test="periodId != null and periodId != ''">
+                period_id = #{periodId},
+            </if>
+            <if test="sex != null and sex != ''">
+                sex = #{sex},
+            </if>
+            <if test="birth != null">
+                birth = #{birth},
+            </if>
+            <if test="phone != null and phone != ''">
+                phone = #{phone},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                mobile = #{mobile},
+            </if>
+            <if test="imageId != null and imageId != ''">
+                image_id = #{imageId},
+            </if>
+            <if test="firstLogin != null and firstLogin != ''">
+                first_login = #{firstLogin},
+            </if>
+            id = #{id}
         WHERE id = #{id}
     </update>
 
@@ -113,9 +133,19 @@
         WHERE mobile = #{mobile}
     </update>
 
-    <update id="updateImageId">
-        UPDATE sys_user SET
-            image_id = #{imageId}
-        WHERE id = #{id}
-    </update>
+    <!-- 生日提醒  -->
+    <select id="getBirthdayReminder" resultType="com.github.ezh.kinder.model.vo.BirthdayReminder">
+        SELECT
+            su.name,
+            cc.name AS "className",
+            DATE_FORMAT(su.birth,'%m%d') - DATE_FORMAT(CURDATE(),'%m%d') AS "day"
+        FROM sys_user su
+        left join c_class cc ON su.class_id = cc.id
+        WHERE su.office_id = #{officeId}
+        <if test="classId != null and classId != ''">
+            AND su.class_id = #{classId}
+        </if>
+        AND su.user_type = 5
+        AND DATE_FORMAT(su.birth,'%m%d') BETWEEN DATE_FORMAT(CURDATE(),'%m%d') AND DATE_FORMAT(DATE_ADD(CURDATE(),INTERVAL #{remindDay} DAY),'%m%d')
+    </select>
 </mapper>

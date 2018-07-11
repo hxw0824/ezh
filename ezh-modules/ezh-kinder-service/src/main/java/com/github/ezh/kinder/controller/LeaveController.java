@@ -1,13 +1,16 @@
 package com.github.ezh.kinder.controller;
 
+import com.github.ezh.common.util.RedisUtils;
 import com.github.ezh.common.util.Result;
 import com.github.ezh.common.util.ResultUtil;
 import com.github.ezh.common.util.ReturnCode;
 import com.github.ezh.kinder.model.domain.CLeaveDomain;
 import com.github.ezh.kinder.model.dto.CLeaveDto;
+import com.github.ezh.kinder.model.dto.DictDto;
 import com.github.ezh.kinder.model.dto.UserDto;
 import com.github.ezh.kinder.model.entity.CLeave;
 import com.github.ezh.kinder.service.CLeaveService;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +40,7 @@ public class LeaveController extends BaseKinderController {
         if(checkUser(domain.getUserId())){
             return ResultUtil.error(ReturnCode.ID_NOT_VALID);
         }
-        UserDto user = userService.getById(domain.getUserId());
+        UserDto user = getUser(domain.getUserId());
 
         CLeave cLeave = new CLeave();
         cLeave.setStatus(user.getUserType().equals(UserDto.USER_TYPE_PARENT) ? CLeaveDto.PASS_AUDITED_STATUS : CLeaveDto.WAIT_AUDITED_STATUS);
@@ -52,28 +55,8 @@ public class LeaveController extends BaseKinderController {
         cLeave.setReadUser(domain.getUserId() + ",");
         boolean isSuccess = cLeaveService.insert(cLeave);
         if(isSuccess) {
-            return ResultUtil.success();
-        }else{
-            return ResultUtil.error(ReturnCode.UNSUCCESS);
-        }
-    }
-
-    /**
-     * 阅读请假单
-     * @param domain
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/readLeave" )
-    public Result readLeave(CLeaveDomain domain) throws Exception {
-        if(checkUser(domain.getUserId())){
-            return ResultUtil.error(ReturnCode.ID_NOT_VALID);
-        }
-        if(checkLeave(domain.getLeaveId())){
-            return ResultUtil.error(ReturnCode.LEAVE_NOT_FOUND);
-        }
-        boolean isSuccess = cLeaveService.readLeave(domain.getLeaveId(),domain.getUserId());
-        if(isSuccess) {
+            delLikeRedis(RedisUtils.LEAVELIST_OFFICE_CLASS_USER_LIMIT + user.getOfficeId() + RedisUtils.separator +
+                    user.getClassId() + RedisUtils.separator_wildcard);
             return ResultUtil.success();
         }else{
             return ResultUtil.error(ReturnCode.UNSUCCESS);
@@ -94,11 +77,19 @@ public class LeaveController extends BaseKinderController {
         if(domain.getOffset() == null || domain.getLimit() == null){
             return ResultUtil.error(ReturnCode.PARAM_IS_ERROR);
         }
-        UserDto user = userService.getById(domain.getUserId());
-        CLeave cLeave = new CLeave(user.getOfficeId(),user.getClassId(),user.getId());
-        CopyOnWriteArrayList<CLeaveDto> list = cLeaveService.getLeaveList(cLeave,user.getUserType(),(domain.getOffset() - 1) * domain.getLimit(), domain.getLimit());
-        return ResultUtil.success(list);
+        UserDto user = getUser(domain.getUserId());
 
+        CopyOnWriteArrayList<CLeaveDto> list = Lists.newCopyOnWriteArrayList();
+        String redisKey_leaveList = RedisUtils.LEAVELIST_OFFICE_CLASS_USER_LIMIT + user.getOfficeId() + RedisUtils.separator + user.getClassId() +
+                RedisUtils.separator + user.getId() + RedisUtils.separator + domain.getOffset() + RedisUtils.underline + domain.getLimit();
+        if(checkRedis(redisKey_leaveList)){
+            CLeave cLeave = new CLeave(user.getOfficeId(),user.getClassId(),user.getId());
+            list = cLeaveService.getLeaveList(cLeave,user.getUserType(),(domain.getOffset() - 1) * domain.getLimit(), domain.getLimit());
+            setRedis(redisKey_leaveList,list);
+        }else{
+            list = (CopyOnWriteArrayList<CLeaveDto>) getRedis(redisKey_leaveList);
+        }
+        return ResultUtil.success(list);
     }
 
     /**
@@ -115,7 +106,24 @@ public class LeaveController extends BaseKinderController {
         if(checkLeave(domain.getLeaveId())){
             return ResultUtil.error(ReturnCode.LEAVE_NOT_FOUND);
         }
-        CLeaveDto cLeave = cLeaveService.getById(domain.getLeaveId());
+        UserDto user = getUser(domain.getUserId());
+
+        CLeaveDto cLeave = new CLeaveDto();
+        String redisKey_leaveDetail = RedisUtils.LEAVEDETAIL_LEAVE + domain.getLeaveId();
+        if(checkRedis(redisKey_leaveDetail)){
+            cLeave = cLeaveService.getById(domain.getLeaveId());
+            setRedis(redisKey_leaveDetail,cLeave);
+        }else{
+            cLeave = (CLeaveDto) getRedis(redisKey_leaveDetail);
+        }
+
+        if(cLeaveService.checkIsRead(domain.getLeaveId(),domain.getUserId()) == 0){
+            boolean isSuccess = cLeaveService.readLeave(domain.getLeaveId(),domain.getUserId());
+            if(isSuccess) {
+                delLikeRedis(RedisUtils.LEAVELIST_OFFICE_CLASS_USER_LIMIT + user.getOfficeId() + RedisUtils.separator + user.getClassId() +
+                        RedisUtils.separator + user.getId() + RedisUtils.separator_wildcard);
+            }
+        }
         return ResultUtil.success(cLeave);
     }
 
@@ -136,7 +144,7 @@ public class LeaveController extends BaseKinderController {
         if(checkLeave(domain.getLeaveId())){
             return ResultUtil.error(ReturnCode.LEAVE_NOT_FOUND);
         }
-        UserDto user = userService.getById(domain.getUserId());
+        UserDto user = getUser(domain.getUserId());
         if(!user.getUserType().equals(UserDto.USER_TYPE_KIND)){
             return ResultUtil.error(ReturnCode.USER_NOT_AUTH);
         }
@@ -157,6 +165,8 @@ public class LeaveController extends BaseKinderController {
             cLeave.setStatus(domain.getStatus());
             boolean isSuccess = cLeaveService.audited(cLeave);
             if (isSuccess) {
+                delLikeRedis(RedisUtils.LEAVELIST_OFFICE_CLASS_USER_LIMIT + user.getOfficeId() + RedisUtils.separator + user.getClassId() +
+                        RedisUtils.separator + user.getId() + RedisUtils.separator_wildcard);
                 return ResultUtil.success();
             } else {
                 return ResultUtil.error(ReturnCode.UNSUCCESS);
@@ -180,10 +190,18 @@ public class LeaveController extends BaseKinderController {
         if(checkLeave(domain.getLeaveId())){
             return ResultUtil.error(ReturnCode.LEAVE_NOT_FOUND);
         }
+        UserDto user = getUser(domain.getUserId());
+
         CLeaveDto cLeaveDto = cLeaveService.getById(domain.getLeaveId());
         if(cLeaveDto.getUserId().equals(domain.getUserId())) {
             boolean isSuccess = cLeaveService.deleteFlag(domain.getLeaveId());
             if (isSuccess) {
+                delRedis(RedisUtils.LEAVEDETAIL_LEAVE + domain.getLeaveId());
+                delLikeRedis(RedisUtils.LEAVELIST_OFFICE_CLASS_USER_LIMIT + user.getOfficeId() + RedisUtils.separator + user.getClassId() +
+                        RedisUtils.separator + user.getId() + RedisUtils.separator_wildcard);
+                if(isTeacher(user)){
+                    delLikeRedis(RedisUtils.LEAVELIST_OFFICE_CLASS_USER_LIMIT + user.getOfficeId() + RedisUtils.separator + "null" + RedisUtils.separator_wildcard);
+                }
                 return ResultUtil.success();
             } else {
                 return ResultUtil.error(ReturnCode.UNSUCCESS);
